@@ -31,7 +31,7 @@ col=unique(cols)[-14]
 getwd()
 setwd('/home/gibh/2021_NRBC_chlyu')
 
-dir.create('Protein_NRBC_marker')
+dir.create('NRBC_DE_analysis')
 
 find_mDEGs_func=function(seu,group,sfile,mgenes=new_all_merged_plasma_protein){
   early_Ery_tissue_markers=FindAllMarkers(subset(seu,Ery_stage=='early_Ery'))
@@ -196,7 +196,7 @@ subcelltype_enrichGO_func=function(RNA_markers){
 # -----------------prepare membrane gene info ---------------------
 
 if(F){
-  all_merged_plasma_protein=readRDS('Protein_NRBC_marker/all_summary_membrane.RDS')
+  all_merged_plasma_protein=readRDS('NRBC_DE_analysis/all_summary_membrane.RDS')
   length(all_merged_plasma_protein) # 3222
   
   library(biomaRt)
@@ -226,7 +226,7 @@ if(F){
   
   new_all_merged_plasma_protein=unique(c(all_merged_plasma_protein,unique(pm_genes$external_gene_name)))
   length(new_all_merged_plasma_protein)
-  saveRDS(new_all_merged_plasma_protein,file = 'Protein_NRBC_marker/new_all_merged_plasma_protein.rds')
+  saveRDS(new_all_merged_plasma_protein,file = 'NRBC_DE_analysis/new_all_merged_plasma_protein.rds')
   
   
   
@@ -245,10 +245,10 @@ if(F){
  table(unique(cell_surface$external_gene_name) %in% all_merged_plasma_protein ) # T/F: 469/215
  table(unique(cell_surface$external_gene_name) %in% new_all_merged_plasma_protein ) # T/F: 469/215 # F/T:84/600
  
- saveRDS(cell_surface,file = 'Protein_NRBC_marker/cell_surface.rds')
+ saveRDS(cell_surface,file = 'NRBC_DE_analysis/cell_surface.rds')
  
 }else{
-  new_all_merged_plasma_protein=readRDS('Protein_NRBC_marker/new_all_merged_plasma_protein.rds')
+  new_all_merged_plasma_protein=readRDS('NRBC_DE_analysis/new_all_merged_plasma_protein.rds')
 }
 
 
@@ -315,124 +315,13 @@ if(F){
   DimPlot(BM_NRBC_altas_seu,group.by = 'new_celltype',reduction = 'ref.umap',cols = cols,split.by = 'stage')
   
 
-  # early Ery: BFUE/CFUE, ProE
-  # mid Ery: Bas
-  # late Ery: Poly, Orth
-  
-  
-  #统计membrane protein 对variable genes的贡献
-  YS_altas_Ery_seu=FindVariableFeatures(YS_altas_Ery_seu,nfeatures = length(rownames(YS_altas_Ery_seu)))
-  var_feature_meta_df=YS_altas_Ery_seu[["RNA"]]@meta.data[,61:68]
-  var_feature_meta_df=var_feature_meta_df[order(var_feature_meta_df$var.features.rank,decreasing = F),]
-  var_feature_meta_df$membrane='no'
-  var_feature_meta_df$membrane[var_feature_meta_df$var.features %in% new_all_merged_plasma_protein]='yes'
-  YS_top2000_var_mgenes=var_feature_meta_df[1:2000,];YS_top2000_var_mgenes=YS_top2000_var_mgenes[YS_top2000_var_mgenes$membrane=='yes','var.features']
-  
-  YS_mgene_invgene_ratio_df=data.frame(c(prop.table(table(var_feature_meta_df$membrane[1:500]))[2],prop.table(table(var_feature_meta_df$membrane[1:1000]))[2],
-                                         prop.table(table(var_feature_meta_df$membrane[1:1500]))[2],prop.table(table(var_feature_meta_df$membrane[1:2000]))[2],
-                                         prop.table(table(rownames(YS_altas_Ery_seu) %in%  new_all_merged_plasma_protein))[2]))
-  
-  rownames(YS_mgene_invgene_ratio_df)=c('mgene_ratio_top500vgene','mgene_ratio_top1000vgene','mgene_ratio_top1500vgene','mgene_ratio_top2000vgene','mgene_ratio_allgene')
-  colnames(YS_mgene_invgene_ratio_df)='ratio';YS_mgene_invgene_ratio_df$ratio=round(YS_mgene_invgene_ratio_df$ratio,3)
-  YS_mgene_invgene_ratio_df$top=c(500,1000,1500,2000,2100)
-  YS_mgene_invgene_ratio_df$membrane='yes'
-  
-  p1=ggplot(var_feature_meta_df[1:2000,],aes(x=vf_vst_counts_rank,y=vf_vst_counts_variance.standardized,color=membrane))+geom_point()+ geom_vline(xintercept=c(500,1000,1500,2000),lty=6,col="black",lwd=0.5)+
-    geom_text_repel(data = YS_mgene_invgene_ratio_df,mapping =aes(x=top,y=4,label=as.character(ratio)))+theme_classic()+ggtitle('YS')
-  
-  
-  
-  head(FL_altas_Ery_seu[["RNA"]]@meta.data)
-  var_feature_meta_df=FL_altas_Ery_seu[["RNA"]]@meta.data
-  var_feature_meta_df=var_feature_meta_df[order(var_feature_meta_df$vf_vst_counts.FL_rank,decreasing = F),]
-  var_feature_meta_df$membrane='no'
-  var_feature_meta_df$membrane[var_feature_meta_df$var.features %in% new_all_merged_plasma_protein]='yes'
-  FL_top2000_var_mgenes=var_feature_meta_df[1:2000,];FL_top2000_var_mgenes=FL_top2000_var_mgenes[FL_top2000_var_mgenes$membrane=='yes','var.features']
-  
-  FL_mgene_invgene_ratio_df=data.frame(c(prop.table(table(var_feature_meta_df$membrane[1:500]))[2],prop.table(table(var_feature_meta_df$membrane[1:1000]))[2],
-                                         prop.table(table(var_feature_meta_df$membrane[1:1500]))[2],prop.table(table(var_feature_meta_df$membrane[1:2000]))[2],
-                                         prop.table(table(rownames(FL_altas_Ery_seu) %in%  new_all_merged_plasma_protein))[2]))
-  
-  rownames(FL_mgene_invgene_ratio_df)=c('mgene_ratio_top500vgene','mgene_ratio_top1000vgene','mgene_ratio_top1500vgene','mgene_ratio_top2000vgene','mgene_ratio_allgene')
-  colnames(FL_mgene_invgene_ratio_df)='ratio';FL_mgene_invgene_ratio_df$ratio=round(FL_mgene_invgene_ratio_df$ratio,3)
-  FL_mgene_invgene_ratio_df$top=c(500,1000,1500,2000,2100)
-  FL_mgene_invgene_ratio_df$membrane='yes'
-  
-  p2=ggplot(var_feature_meta_df[1:2000,],aes(x=vf_vst_counts.FL_rank,y=vf_vst_counts.FL_variance.standardized,color=membrane))+geom_point()+ geom_vline(xintercept=c(500,1000,1500,2000),lty=6,col="black",lwd=0.5)+
-    geom_text_repel(data = FL_mgene_invgene_ratio_df,mapping =aes(x=top,y=60,label=as.character(ratio)))+theme_classic()+ggtitle('FL')
-  
   # 统计一下FL 中的双阳性细胞
   HBB_HBE1_Ery_seu=subset(FL_altas_Ery_seu,HBE1 >1 & HBB >1);HBB_HBE1_Ery_seu# 1924, FL 存在HBE1—>HBB转变的过程, 以后可以从这个数据中研究转变过程
   subset(FL_altas_Ery_seu,HBE1 >0 & HBB <1) # 2691
   table(HBB_HBE1_Ery_seu$id)# 主要来自CS18_F61样本，该样本也是YS——Ery的主要来源
-  # 由高转低，在小鼠中发现FL 存在YS-EMP来源的Ery，但是人里面是缺乏的，我们之前的FL数据显示。这是跟小鼠的不同点，YS-EMP主要产生了mon-derived Max。
   table( subset(FL_altas_Ery_seu,HBE1 >0 & HBB <1)$id)/table(FL_altas_Ery_seu$id)
 
-  head(BM_NRBC_altas_seu)
-  FBM_NRBC_altas_seu=subset(BM_NRBC_altas_seu,stage=='FBM')
-  FBM_NRBC_altas_seu=FindVariableFeatures(FBM_NRBC_altas_seu,nfeatures =length(rownames(FBM_NRBC_altas_seu)))
-  head(FBM_NRBC_altas_seu[["RNA"]]@meta.data)
-  var_feature_meta_df=FBM_NRBC_altas_seu[["RNA"]]@meta.data
-  var_feature_meta_df=var_feature_meta_df[order(var_feature_meta_df$var.features.rank,decreasing = F),]
-  var_feature_meta_df=var_feature_meta_df[var_feature_meta_df$vf_vst_counts_mean>0,]
-  var_feature_meta_df$membrane='no'
-  var_feature_meta_df$membrane[var_feature_meta_df$var.features %in% new_all_merged_plasma_protein]='yes'
-  FBM_top2000_var_mgenes=var_feature_meta_df[1:2000,];FBM_top2000_var_mgenes=FBM_top2000_var_mgenes[FBM_top2000_var_mgenes$membrane=='yes','var.features']
-  
-  FBM_mgene_invgene_ratio_df=data.frame(c(prop.table(table(var_feature_meta_df$membrane[1:500]))[2],prop.table(table(var_feature_meta_df$membrane[1:1000]))[2],
-                                          prop.table(table(var_feature_meta_df$membrane[1:1500]))[2],prop.table(table(var_feature_meta_df$membrane[1:2000]))[2],
-                                          prop.table(table(rownames(FBM_NRBC_altas_seu) %in%  new_all_merged_plasma_protein))[2]))
-  
-  rownames(FBM_mgene_invgene_ratio_df)=c('mgene_ratio_top500vgene','mgene_ratio_top1000vgene','mgene_ratio_top1500vgene','mgene_ratio_top2000vgene','mgene_ratio_allgene')
-  colnames(FBM_mgene_invgene_ratio_df)='ratio';FBM_mgene_invgene_ratio_df$ratio=round(FBM_mgene_invgene_ratio_df$ratio,3)
-  FBM_mgene_invgene_ratio_df$top=c(500,1000,1500,2000,2100)
-  FBM_mgene_invgene_ratio_df$membrane='yes'
-  
-  p3=ggplot(var_feature_meta_df[1:2000,],aes(x=var.features.rank,y=vf_vst_counts_variance.standardized,color=membrane))+geom_point()+ geom_vline(xintercept=c(500,1000,1500,2000),lty=6,col="black",lwd=0.5)+
-    geom_text_repel(data = FBM_mgene_invgene_ratio_df,mapping =aes(x=top,y=30,label=as.character(ratio)))+theme_classic()+ggtitle('FBM')
-  
-  
-  
-  ABM_NRBC_altas_seu=subset(BM_NRBC_altas_seu,stage=='ABM')
-  ABM_NRBC_altas_seu[['RNA']]=JoinLayers(ABM_NRBC_altas_seu[['RNA']])
-  ABM_NRBC_altas_seu=FindVariableFeatures(ABM_NRBC_altas_seu,nfeatures =length(rownames(ABM_NRBC_altas_seu)))
-  
-  head(ABM_NRBC_altas_seu[["RNA"]]@meta.data)
-  var_feature_meta_df=ABM_NRBC_altas_seu[["RNA"]]@meta.data
-  var_feature_meta_df=var_feature_meta_df[order(var_feature_meta_df$var.features.rank,decreasing = F),]
-  var_feature_meta_df=var_feature_meta_df[var_feature_meta_df$vf_vst_counts_mean>0,]
-  var_feature_meta_df$membrane='no'
-  var_feature_meta_df$membrane[var_feature_meta_df$var.features %in% new_all_merged_plasma_protein]='yes'
-  ABM_top2000_var_mgenes=var_feature_meta_df[1:2000,];ABM_top2000_var_mgenes=ABM_top2000_var_mgenes[ABM_top2000_var_mgenes$membrane=='yes','var.features']
-  
-  ABM_mgene_invgene_ratio_df=data.frame(c(prop.table(table(var_feature_meta_df$membrane[1:500]))[2],prop.table(table(var_feature_meta_df$membrane[1:1000]))[2],
-                                          prop.table(table(var_feature_meta_df$membrane[1:1500]))[2],prop.table(table(var_feature_meta_df$membrane[1:2000]))[2],
-                                          prop.table(table(rownames(ABM_NRBC_altas_seu) %in%  new_all_merged_plasma_protein))[2]))
-  
-  rownames(ABM_mgene_invgene_ratio_df)=c('mgene_ratio_top500vgene','mgene_ratio_top1000vgene','mgene_ratio_top1500vgene','mgene_ratio_top2000vgene','mgene_ratio_allgene')
-  colnames(ABM_mgene_invgene_ratio_df)='ratio';ABM_mgene_invgene_ratio_df$ratio=round(ABM_mgene_invgene_ratio_df$ratio,3)
-  ABM_mgene_invgene_ratio_df$top=c(500,1000,1500,2000,2100)
-  ABM_mgene_invgene_ratio_df$membrane='yes'
-  
-  p4=ggplot(var_feature_meta_df[1:2000,],aes(x=var.features.rank,y=vf_vst_counts_variance.standardized,color=membrane))+geom_point()+ geom_vline(xintercept=c(500,1000,1500,2000),lty=6,col="black",lwd=0.5)+
-    geom_text_repel(data = ABM_mgene_invgene_ratio_df,mapping =aes(x=top,y=30,label=as.character(ratio)))+theme_classic()+ggtitle('ABM')
-  
-  
-  p=p1+p2+p3+p4;p
-  ggsave(p,filename = 'Protein_NRBC_marker/mgene_invariable_gene_analysis.pdf',width = 12,height = 10)
-  
-  rm(ABM_NRBC_altas_seu,FBM_NRBC_altas_seu)
-  
-  library(VennDiagram)
-  dev.off()
-  p=venn.diagram(x =list('YS'=YS_top2000_var_mgenes,'FL'=FL_top2000_var_mgenes,'FBM'=FBM_top2000_var_mgenes,'ABM'=ABM_top2000_var_mgenes),
-                 filename = NULL,fill=cols[1:4], scaled = T,main='membrane genes in top2000 variable genes',force.unique = T,main.cex = 2,sub.cex = 2,total.population = T)
-  grid.draw(p)
-  ggsave(p,file='Protein_NRBC_marker/NRBC_altas_mgene_in_top2000vgene_venn.pdf',width = 6,height = 6)
-  inter <- get.venn.partitions(list('YS'=YS_top2000_var_mgenes,'FL'=FL_top2000_var_mgenes,'FBM'=FBM_top2000_var_mgenes,'ABM'=ABM_top2000_var_mgenes))
-  saveRDS(list('YS'=YS_top2000_var_mgenes,'FL'=FL_top2000_var_mgenes,'FBM'=FBM_top2000_var_mgenes,'ABM'=ABM_top2000_var_mgenes),file = 'Protein_NRBC_marker/tissue_NRBC_mvar_genes_list.rds')
-  
-  
+
   
   NBRC_altas_seu=merge(YS_altas_Ery_seu,c(FL_altas_Ery_seu,BM_NRBC_altas_seu));
   NBRC_altas_seu[['prediction.score.celltype']]=NULL
@@ -448,7 +337,7 @@ if(F){
   NBRC_altas_seu@meta.data[rownames(FL_altas_Ery_seu@meta.data),c('final_celltype')]=as.character(FL_altas_Ery_seu$subcelltype)
   table(NBRC_altas_seu$final_celltype)
   
-  # 不考虑 FL/FBM的YS_NRBC
+  # filt  YS_NRBC in FL/FBM
   filt_cells=rownames(NBRC_altas_seu@meta.data[NBRC_altas_seu$tissue_stage %in% c('FL','FBM') & NBRC_altas_seu$final_celltype %in% c("YS_Bas/Poly","YS_Orth"),])
   cho_cells=rownames(NBRC_altas_seu@meta.data)[!rownames(NBRC_altas_seu@meta.data) %in%  filt_cells ];length(cho_cells)
   filt_NBRC_altas_seu=subset(NBRC_altas_seu,cells=cho_cells)
@@ -459,6 +348,10 @@ if(F){
     FeaturePlot(filt_NBRC_altas_seu,features = 'HBE1',split.by = 'tissue_stage')
   rm(NBRC_altas_seu);gc()
   
+  
+  # early Ery: BFUE/CFUE, ProE
+  # mid Ery: Bas
+  # late Ery: Poly, Orth
   
   filt_NBRC_altas_seu$Ery_stage='late_Ery'
   filt_NBRC_altas_seu$Ery_stage[filt_NBRC_altas_seu$final_celltype %in% c('BFUE/CFUE','ProE')]='early_Ery'
@@ -473,7 +366,7 @@ if(F){
   Idents(filt_NBRC_altas_seu)='tissue_stage'
   
   
-  # FL/FBM 存在HBE1->HBB的转换
+  # filt HBE1+NRBC FL/FBM
   temp_seu= subset(filt_NBRC_altas_seu, tissue_stage %in% c('FL','FBM'))
   filt_cells2=WhichCells(temp_seu,expression =  HBE1 >2,slot = 'data')
   length(filt_cells2) # HBE1 >1 : 2245, HBE1 >2: 841 
@@ -496,8 +389,38 @@ if(F){
   filt_NBRC_altas_seu_meta=filt_NBRC_altas_seu_meta[,c('orig.ident', 'nCount_RNA', 'nFeature_RNA', 'component', 'age',  'sex', 'sort.ids', 'fetal.ids','orig.dataset',
                                                        'sequencing.type','id','tissue_stage', 'final_celltype', 'Ery_stage','source', 'source_celltype')]
   
+   
+  s.genes <- cc.genes$s.genes
+  g2m.genes <- cc.genes$g2m.genes
+  filt_NBRC_altas_seu <- CellCycleScoring(filt_NBRC_altas_seu, s.features = s.genes, g2m.features = g2m.genes, set.ident = F)
+  filt_NBRC_altas_seu$source_celltype=paste(filt_NBRC_altas_seu$tissue_stage,filt_NBRC_altas_seu$final_celltype,sep = '_')
+  filt_NBRC_altas_seu$source_celltype=factor(filt_NBRC_altas_seu$source_celltype,levels = c( "YS_ProE","YS_Bas","YS_Poly","YS_Orth", "FL_BFUE/CFUE" ,"FL_ProE", "FL_Bas","FL_Poly","FL_Orth",
+                                                                                             "FBM_BFUE/CFUE" ,"FBM_ProE","FBM_Bas","FBM_Poly","FBM_Orth", "ABM_BFUE/CFUE","ABM_ProE","ABM_Bas","ABM_Poly","ABM_Orth"))
+  filt_NBRC_altas_seu$final_celltype=factor(filt_NBRC_altas_seu$final_celltype,levels = c('BFUE/CFUE','ProE','Bas','Poly','Orth'))
+  filt_NBRC_altas_seu$sourceid=paste(filt_NBRC_altas_seu$tissue_stage,filt_NBRC_altas_seu$id,sep = '_')
   
-  # 计算不同组织微环境稳定造血时期
+  # 少了 GSE253355 Ery数据,其中Ery 包含达IGKC表达细胞：2970,GSE253355 样本的年龄都是50-80岁的老人为主，占比很高,剔除这部分样本数据
+  filt_NBRC_altas_seu=subset(filt_NBRC_altas_seu,subset=IGKC <=1 ) 
+  IGKC_nRBC_seu==subset(filt_NBRC_altas_seu,subset=IGKC <=1 )
+  saveRDS(filt_NBRC_altas_seu,file = '20251125_filt_NBRC_altas_seu.rds')
+  
+}else{
+  #filt_NBRC_altas_seu=readRDS('NRBC_DE_analysis/merged_NRBC_data/filt_NBRC_altas_seu.rds')# 
+  filt_NBRC_altas_seu=readRDS('20251125_filt_NBRC_altas_seu.rds')
+}
+
+
+rownames(filt_NBRC_altas_seu)[grep('^HB',rownames(filt_NBRC_altas_seu))]
+HBGenes=c("HBA1","HBA2","HBB", "HBD" ,"HBE1","HBG1","HBG2","HBM","HBQ1","HBZ")
+VlnPlot(filt_NBRC_altas_seu,features =HBGenes,group.by = 'source_celltype',stack = T,cols = cols)+NoLegend()
+
+
+
+
+#################################################################################################################################################################
+#--------------------------------------------------figure 1: hematopoietic niche shape the differenation of nRBC---------------------------------------------------#
+#################################################################################################################################################################
+# Calculating the proportions of cell subtypes in different tissues during steady-state hematopoiesis.
   YS_CS15_CS18_sample_df=filt_NBRC_altas_seu_meta[filt_NBRC_altas_seu_meta$tissue_stage=='YS' & filt_NBRC_altas_seu_meta$age %in% c('CS15', "CS17" ,"CS18" ),]
   YS_celltype_mratio_df=data.frame( colMeans(prop.table(table(YS_CS15_CS18_sample_df[,c('id','final_celltype')]),margin = 1)))
   colnames(YS_celltype_mratio_df)='YS'
@@ -532,128 +455,16 @@ if(F){
   p
   ggsave(p,file='res_pic/main_figure1/tissue_celltype_ratio_barplot.pdf',width =6 ,height = 6)
   
-  
-  
-  # 之前由于symbo不一致导致的注释别名和基因symbol重复，临时纠正情况
-  if(F){
-    temp_data=GetAssayData(filt_NBRC_altas_seu,assay = 'RNA',layer = 'counts')
-    cho_temp_data=temp_data[c('KIAA1524','KIAA0922', 'C1orf27', 'C17orf62','CIP2A','TMEM131L','ODR4','CYBC1'), ]
-    cho_temp_data['CIP2A',]=cho_temp_data['CIP2A',]+cho_temp_data['KIAA1524',]
-    cho_temp_data['TMEM131L',]=cho_temp_data['TMEM131L',]+cho_temp_data['KIAA0922',]
-    cho_temp_data['ODR4',]=cho_temp_data['ODR4',]+cho_temp_data['C1orf27',]
-    cho_temp_data['CYBC1',]=cho_temp_data['CYBC1',]+cho_temp_data['C17orf62',]
-    cho_temp_data=cho_temp_data[c('CIP2A','TMEM131L','ODR4','CYBC1'),]
-    
-    temp_data=temp_data[!rownames(temp_data) %in% c('KIAA1524','KIAA0922', 'C1orf27', 'C17orf62','CIP2A','TMEM131L','ODR4','CYBC1') ,]
-    temp_data=rbind(temp_data,cho_temp_data)
-    
-    filt_NBRC_altas_seu<-CreateSeuratObject(counts =temp_data,meta.data = filt_NBRC_altas_seu@meta.data )
-    filt_NBRC_altas_seu=NormalizeData(filt_NBRC_altas_seu) %>% FindVariableFeatures(nfeatures = 3000) %>% ScaleData()
-    rm(temp_data);gc()
-    
-    # ATP5 家族基因注释不一致,做差异分析时候得到，校正后发现是因为基因注释信息导致的，故校正
-    ATP5_genes=rownames(filt_NBRC_altas_seu)[grep('^ATP5',rownames(filt_NBRC_altas_seu))]
-    ATP5_genes=mapIds(x = org.Hs.eg.db,keys = ATP5_genes,keytype = 'ALIAS',column = 'SYMBOL' )
-    cor_ATP5_genes=ATP5_genes[names(ATP5_genes)!=ATP5_genes]
-    table(as.character(cor_ATP5_genes)  %in% rownames(filt_NBRC_altas_seu))
-    
-    cor_ATP5_genes_count=GetAssayData(object = filt_NBRC_altas_seu,assay = 'RNA',layer = 'count')[names(cor_ATP5_genes),]
-    rownames(cor_ATP5_genes_count)=as.character(cor_ATP5_genes)
-    
-    cor_ATP5_genes_count2=GetAssayData(object = filt_NBRC_altas_seu,assay = 'RNA',layer = 'count')[as.character(cor_ATP5_genes),]
-    cor_ATP5_genes_count2=cor_ATP5_genes_count2+cor_ATP5_genes_count
-    
-    out_ATP5_genes_count2=GetAssayData(object = filt_NBRC_altas_seu,assay = 'RNA',layer = 'count')
-    out_ATP5_genes_count2=out_ATP5_genes_count2[rownames(out_ATP5_genes_count2)[!rownames(out_ATP5_genes_count2) %in% c(as.character(cor_ATP5_genes),names(cor_ATP5_genes))],]
-    count=rbind(cor_ATP5_genes_count2,out_ATP5_genes_count2);rm(out_ATP5_genes_count2,cor_ATP5_genes_count2,cor_ATP5_genes_count);gc()
-    table(rownames(count) %in% names(cor_ATP5_genes))
-    
-    new_filt_NBRC_altas_seu=CreateSeuratObject(counts = GetAssayData(filt_NBRC_altas_seu,assay = 'RNA',layer = 'counts'),meta.data = filt_NBRC_altas_seu@meta.data,min.cells = 10)
-    new_filt_NBRC_altas_seu[['umap']]=filt_NBRC_altas_seu[['umap']]
-    rm(filt_NBRC_altas_seu);gc()
-    
-    filt_NBRC_altas_seu=new_filt_NBRC_altas_seu;rm(new_filt_NBRC_altas_seu);gc()
-    
-    rm(count);gc()
-    saveRDS(filt_NBRC_altas_seu,file = 'temp_filt_NBRC_altas_seu.rds')
-    
-    org_hsa_gene_symbols=mapIds(x = org.Hs.eg.db,keys = rownames(filt_NBRC_altas_seu),keytype = 'ALIAS',column = 'SYMBOL')
-    table(as.character(org_hsa_gene_symbols)==names(org_hsa_gene_symbols))
-    cor_org_hsa_gene_symbols=org_hsa_gene_symbols[as.character(org_hsa_gene_symbols)!=names(org_hsa_gene_symbols)]
-    cor_org_hsa_gene_symbols=cor_org_hsa_gene_symbols[!is.na(cor_org_hsa_gene_symbols)]
-    length(cor_org_hsa_gene_symbols)
-    table(duplicated(as.character(cor_org_hsa_gene_symbols))) # 75 TRUE, org.Hs.eg.db注释也不完全准确， CGB5/CGB7/CGB8:是不同的基因，但是symbol信息都是CGB3，同一个蛋白不同的亚基组成 ,出现重复的symbol，排除
-    cor_org_hsa_gene_symbols=cor_org_hsa_gene_symbols[!cor_org_hsa_gene_symbols %in% as.character(cor_org_hsa_gene_symbols[duplicated(cor_org_hsa_gene_symbols)])]
-    length(cor_org_hsa_gene_symbols)
-    
-    table(as.character(cor_org_hsa_gene_symbols) %in%  rownames(filt_NBRC_altas_seu))# 1114 TRUE
-    cor_org_hsa_gene_symbols=cor_org_hsa_gene_symbols[cor_org_hsa_gene_symbols %in%  rownames(filt_NBRC_altas_seu)]
-    du_tmp_assay1=GetAssayData(filt_NBRC_altas_seu,layer='counts')[names(cor_org_hsa_gene_symbols),]
-    rownames(du_tmp_assay1)=as.character(cor_org_hsa_gene_symbols)
-    du_tmp_assay2=GetAssayData(filt_NBRC_altas_seu,layer='counts')[as.character(cor_org_hsa_gene_symbols),]
-    
-    du_tmp_assay=du_tmp_assay1+du_tmp_assay2;rm(du_tmp_assay2,du_tmp_assay1);gc()
-    
-    left_tmp_assay=GetAssayData(filt_NBRC_altas_seu,layer='counts')
-    left_tmp_assay=left_tmp_assay[!rownames(left_tmp_assay) %in%  c(names(cor_org_hsa_gene_symbols),as.character(cor_org_hsa_gene_symbols)),]
-    left_tmp_assay=rbind(left_tmp_assay,du_tmp_assay)
-    new_filt_NBRC_altas_seu=CreateSeuratObject(counts = left_tmp_assay,meta.data = filt_NBRC_altas_seu@meta.data,min.cells = 10)
-    new_filt_NBRC_altas_seu[['umap']]=filt_NBRC_altas_seu[['umap']]
-    Idents(new_filt_NBRC_altas_seu)='tissue_stage'
-    rm(left_tmp_assay,du_tmp_assay);gc()
-    filt_NBRC_altas_seu=new_filt_NBRC_altas_seu;rm(new_filt_NBRC_altas_seu)
-    
-    counts=GetAssayData(filt_NBRC_altas_seu,layer = 'counts')
-    counts['MT-ATP8',]=counts['MT-ATP8',]+counts['ATP8',];counts['MT-ATP6',]=counts['MT-ATP6',]+counts['ATP6',]
-    counts=counts[!rownames(counts) %in%  c('ATP6','ATP8'),]
-    SetAssayData(filt_NBRC_altas_seu)
-    
-  }
-    
-  VlnPlot(filt_NBRC_altas_seu,features =as.character(cor_HIST_genes),stack = T )+NoLegend()
-  VlnPlot(filt_NBRC_altas_seu,features =names(cor_HIST_genes)[!names(cor_HIST_genes) %in% c('HIST1H2BA','HIST1H4G')],stack = T )+NoLegend()
-  
-  s.genes <- cc.genes$s.genes
-  g2m.genes <- cc.genes$g2m.genes
-  filt_NBRC_altas_seu <- CellCycleScoring(filt_NBRC_altas_seu, s.features = s.genes, g2m.features = g2m.genes, set.ident = F)
-  filt_NBRC_altas_seu$source_celltype=paste(filt_NBRC_altas_seu$tissue_stage,filt_NBRC_altas_seu$final_celltype,sep = '_')
-  filt_NBRC_altas_seu$source_celltype=factor(filt_NBRC_altas_seu$source_celltype,levels = c( "YS_ProE","YS_Bas","YS_Poly","YS_Orth", "FL_BFUE/CFUE" ,"FL_ProE", "FL_Bas","FL_Poly","FL_Orth",
-                                                                                             "FBM_BFUE/CFUE" ,"FBM_ProE","FBM_Bas","FBM_Poly","FBM_Orth", "ABM_BFUE/CFUE","ABM_ProE","ABM_Bas","ABM_Poly","ABM_Orth"))
-  filt_NBRC_altas_seu$final_celltype=factor(filt_NBRC_altas_seu$final_celltype,levels = c('BFUE/CFUE','ProE','Bas','Poly','Orth'))
-  filt_NBRC_altas_seu$sourceid=paste(filt_NBRC_altas_seu$tissue_stage,filt_NBRC_altas_seu$id,sep = '_')
-  
-  # 少了 GSE253355 Ery数据,其中Ery 包含达IGKC表达细胞：2970,GSE253355 样本的年龄都是50-80岁的老人为主，占比很高,剔除这部分样本数据
-  filt_NBRC_altas_seu=subset(filt_NBRC_altas_seu,subset=IGKC <=1 ) #因为要比较的是健康青壮年，与老人的差异显著，暂时不做此分析研究比较，专门做一个论文课题分析
-  IGKC_nRBC_seu==subset(filt_NBRC_altas_seu,subset=IGKC <=1 )
-  saveRDS(filt_NBRC_altas_seu,file = '20251125_filt_NBRC_altas_seu.rds')
-  
-  #saveRDS(filt_NBRC_altas_seu,file = 'Protein_NRBC_marker/merged_NRBC_data/filt_NBRC_altas_seu.rds') 
-}else{
-  #filt_NBRC_altas_seu=readRDS('Protein_NRBC_marker/merged_NRBC_data/filt_NBRC_altas_seu.rds')# 
-  filt_NBRC_altas_seu=readRDS('20251125_filt_NBRC_altas_seu.rds')
-}
 
-
-rownames(filt_NBRC_altas_seu)[grep('^HB',rownames(filt_NBRC_altas_seu))]
-HBGenes=c("HBA1","HBA2","HBB", "HBD" ,"HBE1","HBG1","HBG2","HBM","HBQ1","HBZ")
-VlnPlot(filt_NBRC_altas_seu,features =HBGenes,group.by = 'source_celltype',stack = T,cols = cols)+NoLegend()
-
-
-
-
-#################################################################################################################################################################
-#--------------------------------------------------figure 1: hematopoietic niche shape the differenation of nRBC---------------------------------------------------#
-#################################################################################################################################################################
-# nRBC from different niche, are quite different and 异质性的
-
-filt_NBRC_altas_seu[['prediction.score.celltype']]=NULL
-p=pheatmap(cor(data.frame(AverageExpression(filt_NBRC_altas_seu,group.by = 'tissue_stage',layer = 'data' )$RNA)),main = 'based on all genes')# ,6 X 6,Protein_NRBC_marker/res_pic/main_figure1/tissue_basedonallgene_cor_heatmap.pdf
+# correlation analysis
+# whole level
+p=pheatmap(cor(data.frame(AverageExpression(filt_NBRC_altas_seu,group.by = 'tissue_stage',layer = 'data' )$RNA)),main = 'based on all genes')# ,6 X 6,NRBC_DE_analysis/res_pic/main_figure1/tissue_basedonallgene_cor_heatmap.pdf
 ggsave(as.ggplot(p),filename = 'res_pic/main_figure1/tissue_basedonallgene_cor_heatmap.pdf',width = 6,height = 6,dpi = 300)
 
-p=pheatmap(cor(data.frame(AverageExpression(filt_NBRC_altas_seu,group.by = 'tissue_stage',layer = 'data',features =VariableFeatures(filt_NBRC_altas_seu) )$RNA)),main = 'based on variable genes')# ,6 X 6,Protein_NRBC_marker/res_pic/main_figure1/tissue_basedonvariable_cor_heatmap.pdf
+p=pheatmap(cor(data.frame(AverageExpression(filt_NBRC_altas_seu,group.by = 'tissue_stage',layer = 'data',features =VariableFeatures(filt_NBRC_altas_seu) )$RNA)),main = 'based on variable genes')# ,6 X 6,NRBC_DE_analysis/res_pic/main_figure1/tissue_basedonvariable_cor_heatmap.pdf
 ggsave(as.ggplot(p),filename = 'res_pic/main_figure1/tissue_basedonvariable_cor_heatmap.pdf',width = 6,height = 6,dpi = 300)
 
-
+# subcelltype level
 YS_celltype_mexp_df=data.frame(AverageExpression(subset(filt_NBRC_altas_seu,tissue_stage=='YS'),  layer = 'data',group.by = 'final_celltype')$RNA)
 FL_celltype_mexp_df=data.frame(AverageExpression(subset(filt_NBRC_altas_seu,tissue_stage=='FL'),  layer = 'data',group.by = 'final_celltype')$RNA)
 FBM_celltype_mexp_df=data.frame(AverageExpression(subset(filt_NBRC_altas_seu,tissue_stage=='FBM'),layer = 'data',group.by = 'final_celltype')$RNA)
@@ -678,8 +489,8 @@ ggsave(as.ggplot(p),filename = 'res_pic/main_figure1/tissue_finalcelltype_basedo
 filt_NBRC_altas_seu$source_celltype=paste(filt_NBRC_altas_seu$tissue_stage,filt_NBRC_altas_seu$final_celltype,sep = ":")
 
 # NRBC reference marker
-p=VlnPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =c('KIT','GATA1','KLF1','TFRC','GYPA','CCNB1','NCL'),stack = T,cols = col,split.by = 'tissue_stage')+NoLegend();p
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure1/classical_nRBC_marker_expression_in_niches_subceltlype_vlnplot.pdf',width = 8,height = 8)
+p=VlnPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =c('KIT','TFRC','GYPA','CCNB1','NCL'),stack = T,cols = col,split.by = 'tissue_stage')+NoLegend();p
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure1/classical_nRBC_marker_expression_in_niches_subceltlype_vlnplot.pdf',width = 8,height = 8)
 
 
 
@@ -691,13 +502,13 @@ filt_NBRC_altas_seu$NRBC_type='definitive'
 filt_NBRC_altas_seu$NRBC_type[filt_NBRC_altas_seu$tissue_stage=='YS']='primitive'
 Idents(filt_NBRC_altas_seu)='NRBC_type'
 pd_tissue_NRBC_DE_res=FindAllMarkers(filt_NBRC_altas_seu,only.pos = T)
-saveRDS(pd_tissue_NRBC_DE_res,file = 'Protein_NRBC_marker/res_data/main_figure2/primary_pd_tissue_NRBC_DE_res.rds')
+saveRDS(pd_tissue_NRBC_DE_res,file = 'NRBC_DE_analysis/res_data/main_figure2/primary_pd_tissue_NRBC_DE_res.rds')
 
 pd_enrichgo_res=compareCluster(geneClusters =list('primitive'=unique(pd_tissue_NRBC_DE_res[pd_tissue_NRBC_DE_res$cluster=='primitive','gene']),
                                                 'definitive'=unique(pd_tissue_NRBC_DE_res[pd_tissue_NRBC_DE_res$cluster=='definitive','gene'])),
                                                keyType = 'SYMBOL',ont = "BP",fun = 'enrichGO',  OrgDb='org.Hs.eg.db' )
                             
-saveRDS(pd_enrichgo_res,file = 'Protein_NRBC_marker/res_data/main_figure2/whole_tissue_pd_NRBC_marker_enrichgo_res.rds')
+saveRDS(pd_enrichgo_res,file = 'NRBC_DE_analysis/res_data/main_figure2/whole_tissue_pd_NRBC_marker_enrichgo_res.rds')
 
 p=dotplot(pd_enrichgo_res,showCategory=10);p
 
@@ -714,7 +525,7 @@ library(ggtree);library(enrichplot)
 pd_enrichgo_res2=pairwise_termsim(pd_enrichgo_res)
 emapplot(pd_enrichgo_res2, node_label = "group")
 p=emapplot(pd_enrichgo_res2, node_label = "category");p
-ggsave(p,filename = 'Protein_NRBC_marker/res_pic/main_figure2/pd_whole_enrichGO_emapplot.pdf',width = 6,height = 8)
+ggsave(p,filename = 'NRBC_DE_analysis/res_pic/main_figure2/pd_whole_enrichGO_emapplot.pdf',width = 6,height = 8)
 
 p=emapplot(pd_enrichgo_res2, node_label = "group")
 table(p$data$color2) # group information :positive cell-cell proliferation adhesion ,cellular macroautophagy autophagy component ,endosomal vesicle Golgi modificatio, splicing DNA replication via 
@@ -835,7 +646,7 @@ known_vesicle_transport=c('ARF1', 'ARF6','AP2M1','RAB5A','RAB7A','VAMP3','STX4')
 VlnPlot(filt_NBRC_altas_seu ,features= vecle_transport,stack = T,group.by = 'source_celltype')+NoLegend()
 
 
-#------------------------------ 排除nRBC亚类细胞比例影响 ，统一细胞亚类比例-------------------------------------#
+#------------------------------ 阶段差异比较分析 排除nRBC亚类细胞比例影响 ，统一细胞亚类比例-------------------------------------#
 
 if(T){
   # fetal NRBC: YS、FL、FBM，三个阶段各抽取1:1:1的细胞，构成early、mid、late NRBC， 与整体不抽样分析，结果差异很小
@@ -872,27 +683,27 @@ if(T){
   pd_subset_filt_NBRC_altas_seu$type_stage='definitive'
   pd_subset_filt_NBRC_altas_seu$type_stage[pd_subset_filt_NBRC_altas_seu$tissue_stage=='YS']='primitive'
   Idents(pd_subset_filt_NBRC_altas_seu)='type_stage'
-  saveRDS(pd_subset_filt_NBRC_altas_seu,file = 'Protein_NRBC_marker/res_data/temp_pd_subset_filt_NBRC_altas_seu.rds')
+  saveRDS(pd_subset_filt_NBRC_altas_seu,file = 'NRBC_DE_analysis/res_data/temp_pd_subset_filt_NBRC_altas_seu.rds')
   
 }else{
-  pd_subset_filt_NBRC_altas_seu=readRDS('Protein_NRBC_marker/res_data/temp_pd_subset_filt_NBRC_altas_seu.rds')
+  pd_subset_filt_NBRC_altas_seu=readRDS('NRBC_DE_analysis/res_data/temp_pd_subset_filt_NBRC_altas_seu.rds')
   pd_subset_filt_NBRC_altas_seu$source_celltype=factor(pd_subset_filt_NBRC_altas_seu$source_celltype,levels = levels(filt_NBRC_altas_seu$source_celltype))
 }
 
 Idents(pd_subset_filt_NBRC_altas_seu)='type_stage'
 pd_whole_level_markers=FindAllMarkers(pd_subset_filt_NBRC_altas_seu)
-saveRDS(pd_whole_level_markers,file = 'Protein_NRBC_marker/res_data/pd_whole_level_markers.rds')
+saveRDS(pd_whole_level_markers,file = 'NRBC_DE_analysis/res_data/pd_whole_level_markers.rds')
 
 top_pd_whole_level_markers=pd_whole_level_markers[pd_whole_level_markers$avg_log2FC >1 & pd_whole_level_markers$pct.2<0.2,] %>% group_by(cluster) %>% do(head(.,10))
 p=DotPlot(filt_NBRC_altas_seu,features = c(top_pd_whole_level_markers$gene[11:20],top_pd_whole_level_markers$gene[1:10]),cols = c('gray','firebrick3'),scale = F,group.by = 'source_celltype')+RotatedAxis() ;p
-ggsave(p,filename = 'Protein_NRBC_marker/res_pic/main_figure2/pd_top10_marker_dotplot.pdf',width = 8,height = 10)
+ggsave(p,filename = 'NRBC_DE_analysis/res_pic/main_figure2/pd_top10_marker_dotplot.pdf',width = 8,height = 10)
 
 genelist=pd_whole_level_markers[pd_whole_level_markers$cluster=='primitive','avg_log2FC'];names(genelist)=pd_whole_level_markers[pd_whole_level_markers$cluster=='primitive','gene']
 genelist=sort(genelist,decreasing = T)
 pd_whole_level_marker_gseGO_res=data.frame(gseGO(geneList =genelist,ont = 'BP',OrgDb = org.Hs.eg.db,keyType = 'SYMBOL',pvalueCutoff = 0.05 ))
 pd_whole_level_marker_gseGO_res$res='up';pd_whole_level_marker_gseGO_res$res[pd_whole_level_marker_gseGO_res$NES<0]='down'
 table(pd_whole_level_marker_gseGO_res$res)#down203,up:43 
-saveRDS(pd_whole_level_marker_gseGO_res,file = 'Protein_NRBC_marker/res_data/main_figure1/pd_whole_level_marker_gseGO_res.rds')
+saveRDS(pd_whole_level_marker_gseGO_res,file = 'NRBC_DE_analysis/res_data/main_figure1/pd_whole_level_marker_gseGO_res.rds')
 
 
 top_pd_whole_level_marker_gseGO_res=pd_whole_level_marker_gseGO_res %>% group_by( res)  %>% do(head(.,20))
@@ -902,7 +713,7 @@ p1=ggplot(top_pd_whole_level_marker_gseGO_res,aes(x =res ,y=Description,color=NE
   theme(text = element_text(face = 'bold'))+ggtitle("primitive vs definitive  in whole level")+scale_y_discrete(labels=function(x)str_wrap(x,width = 50))
 p1
 
-ggsave(p1,filename = 'Protein_NRBC_marker/res_pic/main_figure2/pd_whole_deg_gsego_dotplot.pdf',width = 6,height = 8)
+ggsave(p1,filename = 'NRBC_DE_analysis/res_pic/main_figure2/pd_whole_deg_gsego_dotplot.pdf',width = 6,height = 8)
 
 #--------与原始比较，存在差异，但是P；巨噬，RNA剪接都有，definitive：基本都是免疫与细胞粘附，都存在--------------#
 if(F){
@@ -922,7 +733,7 @@ if(F){
 
 
 group='primitive_definitive'
-sfile='Protein_NRBC_marker/DE_marker/primitive_definitive_all_Ery_RNA_markers.csv'
+sfile='NRBC_DE_analysis/DE_marker/primitive_definitive_all_Ery_RNA_markers.csv'
 res=find_mDEGs_func(seu = pd_subset_filt_NBRC_altas_seu,group = group,sfile = sfile)
 sub_pd_all_Ery_tissue_markers=res[[1]]
 sub_pd_count_df=res[[2]]
@@ -946,18 +757,18 @@ length(unique(new_sub_pd_all_Ery_tissue_markers$gene))# 435
 top5_new_sub_pd_all_Ery_tissue_markers=new_sub_pd_all_Ery_tissue_markers %>% group_by(celltype) %>%top_n(wt = avg_log2FC,n = 5) 
 VlnPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =top5_new_sub_pd_all_Ery_tissue_markers$gene,stack = T)+NoLegend()
 
-#查看在整体群中鉴定到的marker，而在亚群中未鉴定到，中top marker 表达情况，效果比较好,ABM nBRC pct低，而 表达大水平接近
+#查看在整体群中鉴定到的marker，而在亚群中未鉴定到，中top marker 表达情况，效果比较好,ABM nBRC pct低，且 表达大水平接近
 out_pd_whole_level_markers=pd_whole_level_markers[!pd_whole_level_markers$gene %in% unique(sub_pd_all_Ery_tissue_markers$gene),]
 table(out_pd_whole_level_markers$avg_log2FC >1 &  out_pd_whole_level_markers$pct.2 <0.3 & out_pd_whole_level_markers$pct.1 >0.1)
 #FALSE  TRUE 
-#179     8 ,几乎不存在特异性，除了KRCC1， 候选筛选还是应该考虑sub_pd_all_Ery_tissue_markers
+#179     8 ,几乎不存在特异性，除了KRCC1， 候选筛选还是采用sub_pd_all_Ery_tissue_markers
 out_pd_whole_level_markers=out_pd_whole_level_markers[out_pd_whole_level_markers$avg_log2FC >1 &  out_pd_whole_level_markers$pct.2 <0.3 & out_pd_whole_level_markers$pct.1 >0.1,]
 VlnPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =out_pd_whole_level_markers$gene,stack = T,cols = cols)
 DotPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =out_pd_whole_level_markers$gene,scale = T)+RotatedAxis()
 
 sub_pd_all_Ery_tissue_markers_gseGO_res=subcelltype_gseGO_func(RNA_markers = sub_pd_all_Ery_tissue_markers[sub_pd_all_Ery_tissue_markers$cluster=='primitive',])
 sub_pd_all_Ery_tissue_markers_gseGO_res[[2]]$res='up';sub_pd_all_Ery_tissue_markers_gseGO_res[[2]]$res[sub_pd_all_Ery_tissue_markers_gseGO_res[[2]]$NES <0]='down'
-saveRDS(sub_pd_all_Ery_tissue_markers_gseGO_res,file = 'Protein_NRBC_marker/res_data/main_figure2/sub_pd_all_Ery_tissue_markers_gseGO_res.rds')
+saveRDS(sub_pd_all_Ery_tissue_markers_gseGO_res,file = 'NRBC_DE_analysis/res_data/main_figure2/sub_pd_all_Ery_tissue_markers_gseGO_res.rds')
 
 top_sub_pd_all_Ery_tissue_markers_gseGO_res=sub_pd_all_Ery_tissue_markers_gseGO_res[[2]][sub_pd_all_Ery_tissue_markers_gseGO_res[[2]]$ONTOLOGY=='BP',] %>% group_by(celltype,res) %>% do(head(.,10))
 top_sub_pd_all_Ery_tissue_markers_gseGO_res$celltype=factor(top_sub_pd_all_Ery_tissue_markers_gseGO_res$celltype,levels = c('early_Ery','mid_Ery','late_Ery'))
@@ -968,21 +779,12 @@ p2=ggplot(top_sub_pd_all_Ery_tissue_markers_gseGO_res,aes(x =celltype ,y=Descrip
   #scale_y_discrete(label=function(x)str_wrap(string = x,width = 50))
   
 p2
-ggsave(p2,filename = 'Protein_NRBC_marker/res_pic/main_figure2/pd_erysubstage_gsetop10_dotplot.pdf',width = 8,height = 8)
+ggsave(p2,filename = 'NRBC_DE_analysis/res_pic/main_figure2/pd_erysubstage_gsetop10_dotplot.pdf',width = 8,height = 8)
 
 
 # 利用emapplot 查看top enriched pathway 之间的关系
 test=pairwise_termsim(sub_pd_all_Ery_tissue_markers_gseGO_res[[1]]$early_Ery)
 emapplot(test,color='NES',showCategory=30)+ggtitle('pd_early_Ery_top30')
-# 细胞迁移通路与血管的管发育通路共享部分驱动共享基因
-p_core_genes=top_sub_pd_all_Ery_tissue_markers_gseGO_res[top_sub_pd_all_Ery_tissue_markers_gseGO_res$celltype=='early_Ery' & top_sub_pd_all_Ery_tissue_markers_gseGO_res$NES >0,]$core_enrichment
-names(p_core_genes)=as.character(top_sub_pd_all_Ery_tissue_markers_gseGO_res[top_sub_pd_all_Ery_tissue_markers_gseGO_res$celltype=='early_Ery' & top_sub_pd_all_Ery_tissue_markers_gseGO_res$NES >0,]$Description)
-p_core_genes_list=sapply(p_core_genes,function(x){strsplit(x,split = '/')})
-dev.off()
-p=venn.diagram(p_core_genes_list[c('positive regulation of cell motility','tissue morphogenesis','blood vessel development')],
-               filename = NULL,fill=cols[1:3], scaled = T,main='test',force.unique = T,main.cex = 2,sub.cex = 2,total.population = T)
-grid.draw(p)
-
 test=pairwise_termsim(sub_pd_all_Ery_tissue_markers_gseGO_res[[1]]$mid_Ery)
 emapplot(test,color='NES',showCategory=30)+ggtitle('pd_mid_Ery_top30')
 test=pairwise_termsim(sub_pd_all_Ery_tissue_markers_gseGO_res[[1]]$late_Ery)
@@ -1004,7 +806,7 @@ for (celltype in c('early_Ery','mid_Ery','late_Ery')) {
 
 pd_all_Ery_tissue_markers_enrichGO_df$ratio=as.numeric(t(data.frame(strsplit(pd_all_Ery_tissue_markers_enrichGO_df$GeneRatio,split = '/')))[,1])/as.numeric(t(data.frame(strsplit( pd_all_Ery_tissue_markers_enrichGO_df$GeneRatio,split = '/')))[,2])
 pd_all_Ery_tissue_markers_enrichGO_df$celltype=factor(pd_all_Ery_tissue_markers_enrichGO_df$celltype,levels =c('early_Ery','mid_Ery','late_Ery') )
-saveRDS(pd_all_Ery_tissue_markers_enrichGO_df,file = 'Protein_NRBC_marker/res_data/main_figure2/pd_all_Ery_tissue_markers_enrichGO_df.rds')
+saveRDS(pd_all_Ery_tissue_markers_enrichGO_df,file = 'NRBC_DE_analysis/res_data/main_figure2/pd_all_Ery_tissue_markers_enrichGO_df.rds')
 
 top_pd_all_Ery_tissue_markers_enrichGO_df=pd_all_Ery_tissue_markers_enrichGO_df %>%group_by(type,celltype) %>% do(head(.,10))
 top_pd_all_Ery_tissue_markers_enrichGO_df=top_pd_all_Ery_tissue_markers_enrichGO_df[order(top_pd_all_Ery_tissue_markers_enrichGO_df$type,top_pd_all_Ery_tissue_markers_enrichGO_df$celltype),]
@@ -1012,7 +814,7 @@ top_pd_all_Ery_tissue_markers_enrichGO_df$Description =factor(top_pd_all_Ery_tis
 p=ggplot(top_pd_all_Ery_tissue_markers_enrichGO_df,aes(x=type,y=Description,color=-log10(p.adjust),size=ratio))+geom_point()+theme_bw()+scale_color_gradient2(low = 'blue',mid='gray',high = 'firebrick3')+facet_grid(~celltype)+
   theme( axis.text.x = element_text(angle = 45,hjust = 1))+ggtitle(label = 'enrichGO')+scale_y_discrete(label=function(x)str_wrap(x,width = 50))
 p
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure2/pd_erystage_enrichtop10_dotplot.pdf',width = 8,height = 8)
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure2/pd_erystage_enrichtop10_dotplot.pdf',width = 8,height = 8)
 
 # 发现YS NRBC 显著高表达MTq1家族基因，抗氧化酶基因SOD3和FAM213A（PRXL2A），应激标记基因GDF15 ,ABAC1：囊泡运输的关键调控基因， 可能参与调控 自噬体形成 或成熟过程，BEX1基因:神经中研究比较多，
 #基因富集分析也显著富集 自噬、囊泡运输和金属离子应答通路通路，且细胞复制多个通路在末期下调。
@@ -1042,7 +844,7 @@ p1+p2+plot_layout(ncol = 1,heights = c(0.6,1.2))
 
 
 #----------------blood_development_genes------------#
-# primitive 显著富集到多个血管发育相关通路，可能原因（血管母细胞分子印记）（2）参与调控血管发生
+# primitive 显著富集到多个血管发育相关通路，可能原因血管母细胞来源分子印记（2）参与调控血管发生
 
 cho_enrich_pathways=top_sub_pd_all_Ery_tissue_markers_gseGO_res$Description[grep('blood|vasculature|tube',top_sub_pd_all_Ery_tissue_markers_gseGO_res$Description)]
 blood_development_genes=unique(unlist(strsplit(top_sub_pd_all_Ery_tissue_markers_gseGO_res[top_sub_pd_all_Ery_tissue_markers_gseGO_res$Description %in% cho_enrich_pathways,]$core_enrichment,split = '/')))
@@ -1146,7 +948,7 @@ VlnPlot(filt_NBRC_altas_seu,features =known_hema_function_genes,group.by = 'sour
 known_hema_function_genes=c('NFE2L2','FTH1','FTL','SLC40A1','ALAS2','SLC25A37','SLC25A38','FECH','HMOX1')
 VlnPlot(filt_NBRC_altas_seu,features =hema_function_genes,group.by = 'source_celltype',stack = T,split.by = 'tissue_stage',cols = cols )+NoLegend()
 
-#-------------------------iron 压力-------------------#
+#-------------------------iron stress-------------------#
 cho_enrich_pathways=top_sub_pd_all_Ery_tissue_markers_gseGO_res$Description[grep(' ion',top_sub_pd_all_Ery_tissue_markers_gseGO_res$Description)]
 iron_stress_genes=unique(unlist(strsplit(top_sub_pd_all_Ery_tissue_markers_gseGO_res[top_sub_pd_all_Ery_tissue_markers_gseGO_res$Description %in% cho_enrich_pathways,]$core_enrichment,split = '/')))
 length(iron_stress_genes)
@@ -1222,7 +1024,7 @@ gene_list=list('coregene_vasculature_development'=top_blood_development_genes$ge
                'coregene_immune_remodeling'=immune_pathway_related_genes,'coregene_MHC'=MHC_genes
                
 )
-saveRDS(gene_list,file = 'Protein_NRBC_marker/res_data/main_figure2/keypathways_keycore_gene_list.rds')
+saveRDS(gene_list,file = 'NRBC_DE_analysis/res_data/main_figure2/keypathways_keycore_gene_list.rds')
 # 彼此存在重复,特别是kn 与core之间
 all_genes=unique(unlist(gene_list))
 core_genes=unique(as.character(unlist(gene_list[names(gene_list)[grep('core',names(gene_list))]])))
@@ -1238,7 +1040,7 @@ an_df[kn_keygenes[!kn_keygenes %in% core_genes],'type']='known_keygenes'
 
 p=pheatmap(t(mexp_df),annotation_col =an_df,cluster_rows = F,annotation_colors = list('knwon_keygene'=cols[1],'top_coregenes'=cols[2]), # cols[1]:
          cluster_cols = F,scale = 'column',border_color = 'white',color = colorRampPalette(colors = c('gray','white','firebrick3'))(100))
-ggsave(as.ggplot(p),filename='Protein_NRBC_marker/res_pic/main_figure2/keypathay_topcoregene_exp_heatmap.pdf',width = 20,height = 5,dpi = 300)
+ggsave(as.ggplot(p),filename='NRBC_DE_analysis/res_pic/main_figure2/keypathay_topcoregene_exp_heatmap.pdf',width = 20,height = 5,dpi = 300)
 
 
 
@@ -1282,7 +1084,7 @@ p$theme <- p$theme + theme(
 )
 
 print(p)
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure2/pd_key_pathway_score_stage_vlnplot.pdf',width = 8,height = 8)
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure2/pd_key_pathway_score_stage_vlnplot.pdf',width = 8,height = 8)
 
 
 test_p_list=list()
@@ -1310,96 +1112,6 @@ pheatmap(celltype_mexp_df[gene_list_df[gene_list_df$avg_log2FC >1 & gene_list_df
 
 
 
-#-------------------------------------------------------YS vs FL/FBM/ABM--------------------------------------------#
-Idents(filt_NBRC_altas_seu)='tissue_stage'
-group='YS_FL'
-sfile='Protein_NRBC_marker/DE_marker/YS_FL_all_Ery_RNA_markers.csv'
-res=find_mDEGs_func(seu = subset(filt_NBRC_altas_seu,tissue_stage %in% c('YS','FL')),group = group,sfile = sfile)
-YS_FL_all_Ery_tissue_markers=res[[1]]
-YS_FL_count_df=res[[2]]
-rm(res);gc()
-
-group='YS_FBM'
-sfile='Protein_NRBC_marker/DE_marker/YS_FBM_all_Ery_RNA_markers.csv'
-res=find_mDEGs_func(seu = subset(filt_NBRC_altas_seu,tissue_stage %in% c('YS','FBM')),group = group,sfile = sfile)
-YS_FBM_all_Ery_tissue_markers=res[[1]]
-YS_FBM_count_df=res[[2]]
-rm(res);gc()
-
-
-group='YS_ABM'
-sfile='Protein_NRBC_marker/DE_marker/YS_ABM_all_Ery_RNA_markers.csv'
-res=find_mDEGs_func(seu = subset(filt_NBRC_altas_seu,tissue_stage %in% c('YS','ABM')),group = group,sfile = sfile)
-YS_ABM_all_Ery_tissue_markers=res[[1]]
-YS_ABM_count_df=res[[2]]
-rm(res);gc()
-
-p=venn.diagram(x = list('FL_YS'=YS_FL_all_Ery_tissue_markers$gene,'FBM_YS'=YS_FBM_all_Ery_tissue_markers$gene,'ABM_YS'=YS_ABM_all_Ery_tissue_markers$gene),
-                  filename ='Protein_NRBC_marker/res_pic/main_figure2/HSPC_derived_FLFBMABM_YS_DEGS_venn.tiff' ,fill=cols[1:3],alpha=0.6)
-grid.draw(p) # 
-length(unique(unlist(list('FL_YS'=YS_FL_all_Ery_tissue_markers$gene,'FBM_YS'=YS_FBM_all_Ery_tissue_markers$gene,'ABM_YS'=YS_ABM_all_Ery_tissue_markers$gene)))) # 14205
-
-YS_FL_subcelltype_gseGO_list=subcelltype_gseGO_func(RNA_markers =YS_FL_all_Ery_tissue_markers[YS_FL_all_Ery_tissue_markers$cluster=='FL',] )
-YS_FBM_subcelltype_gseGO_list=subcelltype_gseGO_func(RNA_markers =YS_FBM_all_Ery_tissue_markers[YS_FBM_all_Ery_tissue_markers$cluster=='FBM',] )
-YS_ABM_subcelltype_gseGO_list=subcelltype_gseGO_func(RNA_markers =YS_ABM_all_Ery_tissue_markers[YS_ABM_all_Ery_tissue_markers$cluster=='ABM',] )
-YS_FL_subcelltype_gseGO_list[[2]]$group='YS_FL'
-YS_FBM_subcelltype_gseGO_list[[2]]$group='YS_FBM'
-YS_ABM_subcelltype_gseGO_list[[2]]$group='YS_ABM'
-degs_gseGO_res_df=YS_FL_subcelltype_gseGO_list[[2]]
-degs_gseGO_res_df=rbind(degs_gseGO_res_df,rbind(YS_FBM_subcelltype_gseGO_list[[2]],YS_ABM_subcelltype_gseGO_list[[2]]))
-write.csv(degs_gseGO_res_df,file = 'Protein_NRBC_marker/res_data/main_figure1/tissue_nRBC_degs_gseGO_res_df1.csv')
-
-degs_gseGO_res_df=degs_gseGO_res_df[degs_gseGO_res_df$ONTOLOGY=='BP',]
-degs_gseGO_res_df$group=factor(degs_gseGO_res_df$group,levels = c('YS_FL','YS_FBM','YS_ABM'))
-degs_gseGO_res_df$res='up'
-degs_gseGO_res_df$res[degs_gseGO_res_df$NES <0]='dn'
-degs_gseGO_res_df$celltype=factor(degs_gseGO_res_df$celltype,levels = c('early_Ery','mid_Ery','late_Ery'))
-
-top_degs_gseGO_bp_res_df=degs_gseGO_res_df %>% group_by(group,celltype,res)  %>%do(head(.,10)) # top_n(wt =-log10(p.adjust),n = 10 ) #
-head(sort(table(top_degs_gseGO_bp_res_df$Description),decreasing = T),40)
-head(top_degs_gseGO_bp_res_df[,c(1:10,13:14)])
-top_degs_gseGO_bp_res_df$Description=factor(top_degs_gseGO_bp_res_df$Description,levels = unique(top_degs_gseGO_bp_res_df$Description))
-# ABM NRBC对比fetal NRBC具有免疫调节作用，而fetal NRBC侧重于器官的形态发育，特别是 对血管的发育调控
-#ggplot(top_degs_gseGO_bp_res_df,aes(x=celltype,y=Description,color=NES,size=-log10( p.adjust)))+geom_point()+facet_grid(~group)+theme_bw()+scale_color_gradient2(low = 'blue',mid = 'white',high = 'firebrick3')+
-#  theme(axis.text.x = element_text(angle = 45,hjust = 1))+ggtitle(label = 'gseGO of DEGs')
-
-temp_df=top_degs_gseGO_bp_res_df[top_degs_gseGO_bp_res_df$group=='YS_FL',]
-temp_df=temp_df[order(temp_df$celltype,temp_df$res,temp_df$Description),]
-temp_df$Description=factor(temp_df$Description,levels = unique(temp_df$Description))
-p11=ggplot(temp_df,aes(x=celltype,y=Description,color=NES,size=-log10( p.adjust)))+geom_point()+theme_bw()+scale_color_gradient2(low = 'blue',mid = 'white',high = 'firebrick3')+
-  theme(axis.text.x = element_text(angle = 45,hjust = 1))+ggtitle(label = 'FL vs YS nRBC gseGO of DEGs')+theme(text = element_text(face = 'bold'))
-
-temp_df=top_degs_gseGO_bp_res_df[top_degs_gseGO_bp_res_df$group=='YS_FBM',]
-temp_df=temp_df[order(temp_df$celltype,temp_df$res,temp_df$Description),]
-temp_df$Description=factor(temp_df$Description,levels = unique(temp_df$Description))
-p12=ggplot(temp_df,aes(x=celltype,y=Description,color=NES,size=-log10( p.adjust)))+geom_point()+theme_bw()+scale_color_gradient2(low = 'blue',mid = 'white',high = 'firebrick3')+
-  theme(axis.text.x = element_text(angle = 45,hjust = 1))+ggtitle(label = 'FBM vs YS  nRBC gseGO of DEGs')+theme(text = element_text(face = 'bold'))
-
-temp_df=top_degs_gseGO_bp_res_df[top_degs_gseGO_bp_res_df$group=='YS_ABM',]
-temp_df=temp_df[order(temp_df$celltype,temp_df$res,temp_df$Description),]
-temp_df$Description=factor(temp_df$Description,levels = unique(temp_df$Description))
-p13=ggplot(temp_df,aes(x=celltype,y=Description,color=NES,size=-log10( p.adjust)))+geom_point()+theme_bw()+scale_color_gradient2(low = 'blue',mid = 'white',high = 'firebrick3')+
-  theme(axis.text.x = element_text(angle = 45,hjust = 1))+ggtitle(label = 'ABM vs YS nRBC gseGO of DEGs')+theme(text = element_text(face = 'bold'))
-
-p=p11+p12+p13;p
-ggsave(p,width =24 ,height =10,filename='Protein_NRBC_marker/res_pic/main_figure2/DEGS_gseGOBP_substate_YS_HSPC_derived_dotplot.pdf' )
-
-#--------------top20-------------------#
-top_degs_gseGO_bp_res_df2=degs_gseGO_res_df %>% group_by(group,celltype,res)  %>%do(head(.,20)) # top_n(wt =-log10(p.adjust),n = 10 ) #
-all_shared_pathway_inDefinitive=intersect(intersect(top_degs_gseGO_bp_res_df2[top_degs_gseGO_bp_res_df2$group=='YS_FL',]$Description,
-                                                    top_degs_gseGO_bp_res_df2[top_degs_gseGO_bp_res_df2$group=='YS_FBM',]$Description),
-                                          top_degs_gseGO_bp_res_df2[top_degs_gseGO_bp_res_df2$group=='YS_ABM',]$Description)
-temp_df=degs_gseGO_res_df[degs_gseGO_res_df$Description %in% c(all_shared_pathway_inDefinitive), ]
-temp_df=temp_df[order(temp_df$group,temp_df$celltype,temp_df$res,temp_df$Description),]
-temp_df$Description=factor(temp_df$Description,levels = unique(temp_df$Description))
-
-p=ggplot(temp_df,aes(x=group,y=Description ,color=NES,size=-log10(p.adjust)))+geom_point()+facet_grid(~celltype)+
-  theme_classic()+scale_color_gradient2(low = 'blue',mid = 'white',high = 'firebrick3')+RotatedAxis()
-p
-ggsave(p,width =8 ,height =8,filename='Protein_NRBC_marker/res_pic/main_figure2/top20_DEGS_gseGOBP_substate_YS_HSPC_derived_shared_dotplot.pdf' )
-
-
-
 #  富集分析发现YS nRBC 晚期显著下调细胞有丝分裂多个相关通路，分析 不同niche 中nRBC 细胞周期分布
 YS_id_phase_ratio=prop.table(table(filt_NBRC_altas_seu@meta.data[filt_NBRC_altas_seu$tissue_stage=='YS',c('sourceid','Phase')]),margin = 1)
 FL_id_phase_ratio=prop.table(table(filt_NBRC_altas_seu@meta.data[filt_NBRC_altas_seu$tissue_stage=='FL',c('sourceid','Phase')]),margin = 1)
@@ -1409,25 +1121,21 @@ ABM_id_phase_ratio=prop.table(table(filt_NBRC_altas_seu@meta.data[filt_NBRC_alta
 fetal_id_phase_ratio=rbind(data.frame(YS_id_phase_ratio),rbind(data.frame(FL_id_phase_ratio),data.frame(FBM_id_phase_ratio)))
 fetal_id_phase_ratio$sourceid=factor(fetal_id_phase_ratio$sourceid,levels = c(rownames(YS_id_phase_ratio),rownames(FL_id_phase_ratio)[15:21],rownames(FL_id_phase_ratio)[10:14],rownames(FL_id_phase_ratio)[1:9],rownames(FBM_id_phase_ratio)))
 p=ggplot(data.frame(fetal_id_phase_ratio),aes(x=sourceid,y=Freq,fill=Phase))+geom_bar(stat = 'identity')+theme_bw()+scale_fill_manual(values =  cols)+theme(axis.text.x = element_text(angle = 90,hjust = 1))
-ggsave(p,width =8 ,height =6,filename='Protein_NRBC_marker/res_pic/main_figure2/NRBC_altas_CellCycle_phase_ratio_sourceid_barplot.pdf' )
+ggsave(p,width =8 ,height =6,filename='NRBC_DE_analysis/res_pic/main_figure2/NRBC_altas_CellCycle_phase_ratio_sourceid_barplot.pdf' )
 
 p=DimPlot(filt_NBRC_altas_seu,split.by = 'tissue_stage',group.by = 'Phase',cols = cols,ncol = 1,raster = F)
-ggsave(p,width =4 ,height =8,filename='Protein_NRBC_marker/res_pic/main_figure2/NRBC_altas_CellCycle_phase_umap.pdf' )
+ggsave(p,width =4 ,height =8,filename='NRBC_DE_analysis/res_pic/main_figure2/NRBC_altas_CellCycle_phase_umap.pdf' )
 
 
 
 p=as.ggplot(pheatmap(t(prop.table(table(filt_NBRC_altas_seu@meta.data[,c('source_celltype','Phase')]),margin = 1)),display_numbers = T,cluster_rows = F,cluster_cols = F,main = 'ratio of Phase',
                      color=colorRampPalette(colors = brewer.pal(11, "PiYG")[c(8,6,3)])(100)))
 p
-ggsave(p,width =8 ,height =4,filename='Protein_NRBC_marker/res_pic/main_figure2/niche_NRBC_altas_CellCycle_phase_ratio_heatmap.pdf' )
+ggsave(p,width =8 ,height =4,filename='NRBC_DE_analysis/res_pic/main_figure2/niche_NRBC_altas_CellCycle_phase_ratio_heatmap.pdf' )
 
 
 
-# 查看已il家族受体表达情况
-VlnPlot(filt_NBRC_altas_seu ,features =c('IL2RA','IL2RB','IL2RG','IL4R','IL10RA','IL10RB','IL6R','IL6ST','IL10RA'),stack = T,group.by = 'source_celltype',cols = cols)+NoLegend()
-
-
-# --------------defninitive vs primitive nRBC 在细胞脱核方面的差异, 后期考虑-------------------#
+# --------------defninitive vs primitive nRBC 在细胞脱核方面的差异 分析------------------#
 
 
 # 1. 准备阶段
@@ -1499,10 +1207,10 @@ VlnPlot(filt_NBRC_altas_seu,stack = T,features = c(key_genes1,key_genes2,key_gen
 temp_df=sub_pd_all_Ery_tissue_markers[sub_pd_all_Ery_tissue_markers$celltype=='early_Ery' & sub_pd_all_Ery_tissue_markers$ge %in%  c(key_genes1,key_genes2,key_genes3,'VRK1') ,]
 temp_df=temp_df[temp_df$avg_log2FC >0,];temp_df$gene=factor(temp_df$gene,level=c(key_genes1,key_genes2,key_genes3,'VRK1'))
 p=ggplot(temp_df,aes(x=gene,y=avg_log2FC,fill= cluster))+geom_bar(stat = 'identity')+theme_classic()+RotatedAxis()
-ggsave(p,width =12 ,height =4,filename='Protein_NRBC_marker/res_pic/main_figure2/pd_nuclear_keygene_DE_expression.pdf' )
+ggsave(p,width =12 ,height =4,filename='NRBC_DE_analysis/res_pic/main_figure2/pd_nuclear_keygene_DE_expression.pdf' )
 
 p=VlnPlot(filt_NBRC_altas_seu,stack = T,features = c(key_genes1,key_genes2,key_genes3,'VRK1'),group.by = 'source_celltype',split.by = 'tissue_stage',cols = cols);p
-ggsave(p,width =12 ,height =6,filename='Protein_NRBC_marker/res_pic/main_figure2/pd_nuclear_keygene_VlnPlot_expression.pdf' )
+ggsave(p,width =12 ,height =6,filename='NRBC_DE_analysis/res_pic/main_figure2/pd_nuclear_keygene_VlnPlot_expression.pdf' )
 
 # 脱核关键调控因子
 # ZMPSTE24	参与核纤层蛋白A前体的加工成熟	缺失导致核异常及脱核障碍
@@ -1544,6 +1252,35 @@ gene_sets$`GO:0043131`=c('NEMP1','PLEK2')
 VlnPlot(filt_NBRC_altas_seu,stack = T,features = gene_sets$`enucleate erythrocyte differentiation`,group.by = 'source_celltype',split.by = 'tissue_stage',cols = cols)
 VlnPlot(filt_NBRC_altas_seu,stack = T,features = gene_sets$`enucleate erythrocyte development`,group.by = 'source_celltype',split.by = 'tissue_stage',cols = cols)
 
+######################################################################################################################################################
+#----------------bulk RNAseq validated the marker expression
+######################################################################################################################################################
+defintive_markers=readRDS('NRBC_DE_analysis/res_data/main_figure3/defintive_markers.rds')
+FL_ABM_nRBC_df_refer_control_df=readRDS('ref_data/bulk_RNAseq/nr_FL_ABM_nRBC_ref_ACTB.rds')
+FL_ABM_nRBC_df_df=readRDS('ref_data/bulk_RNAseq/FL_ABM_nRBC_df_df_nr_exp.rds')
+
+p=pheatmap(FL_ABM_nRBC_df_refer_control_df[c('ACTB', as.character(unlist(defintive_markers))),-grep('MM|thy_ery',colnames(FL_ABM_nRBC_df_refer_control_df))],cluster_rows = F,cluster_cols = F,annotation_row = symbol_an_df,
+         color = colorRampPalette(colors = c('white','firebrick3'))(100))
+ggsave(as.ggplot(p),filename = 'NRBC_DE_analysis/res_pic/main_figure3/definitive_marker_expression_FL_ABM_bulkRNAseq_heatmap.pdf',width = 8,height = 8)
+
+MHC_genes=c("B2M","HLA-A","HLA-B","HLA-C","HLA-E","CD74","HLA-DMA","HLA-DMB","HLA-DOA","HLA-DOB","HLA-DPA1","HLA-DPB1","HLA-DQA1", "HLA-DQB1" ,"HLA-DQB2" ,"HLA-DRA" ,"HLA-DRB1","HLA-DRB4", "HLA-DRB5","HLA-DRB6","TAPBP") # order, and cho
+peptide_load=c('TAPBP','TAP1','TAP2','PDIA3','ERAP1')
+Proteasome_genes=rownames(Ery_count_df)[grep('PSMB',rownames(Ery_count_df))]
+Proteasome_genes
+Proteasome_genes=c(Proteasome_genes[1],Proteasome_genes[3:10],Proteasome_genes[2])
+# CIITA（MHC-II和共刺激分子主调控因子）
+co_stimulatory =c('CIITA','CD86','CD80','ICOSLG','CD40','OX40L', 'TNFSF4', 'TNFSF9', 'TNFSF14', 'TNFSF18')
+co_inhibtor=c('CD274', 'PDCD1LG2', 'CD276', 'VTCN1', 'HHLA2', 'IDO1')
+
+all_antigen_process_genes=unique(c(MHC_genes,peptide_load,Proteasome_genes,co_stimulatory,co_inhibtor))
+p=pheatmap(Ery_count_df[all_antigen_process_genes[all_antigen_process_genes %in% rownames(Ery_count_df)],],
+         cluster_rows = F,cluster_cols = F,show_colnames = F,annotation_col = Ery_annotation_df[,c('label.fine','celltype')],color = colorRampPalette(colors = c('white','firebrick3'))(100))
+ggsave(as.ggplot(p),filename = 'NRBC_DE_analysis/res_pic/main_figure3/MHC_peptide_load_gene_expression_UCB_bulkRNAseq_heatmap.pdf',width = 8,height = 8)
+
+p=pheatmap(FL_ABM_nRBC_df_refer_control_df[c('ACTB',all_antigen_process_genes[all_antigen_process_genes %in% rownames(FL_ABM_nRBC_df_refer_control_df)]),-grep('MM|thy_ery',colnames(FL_ABM_nRBC_df_refer_control_df))],
+           cluster_rows = F,cluster_cols = F,show_colnames = T,color = colorRampPalette(colors = c('white','firebrick3'))(100))
+
+ggsave(as.ggplot(p),filename = 'NRBC_DE_analysis/res_pic/main_figure3/MHC_peptide_load_gene_expression_FL_ABM_bulkRNAseq_heatmap.pdf',width = 8,height = 8)
 
 
 
@@ -1554,9 +1291,9 @@ VlnPlot(filt_NBRC_altas_seu,stack = T,features = gene_sets$`enucleate erythrocyt
 filt_NBRC_altas_seu=subset(filt_NBRC_altas_seu,NRBC_type=='definitive')
 Idents(filt_NBRC_altas_seu)='tissue_stage'
 HSPC_derived_NRBC_DE_res=FindAllMarkers(subset(filt_NBRC_altas_seu,NRBC_type=='definitive'))
-saveRDS(HSPC_derived_NRBC_DE_res,file ='Protein_NRBC_marker/DE_marker/HSPC_derived_nRBC_wholelevel_RNA_markers.rds' )
+saveRDS(HSPC_derived_NRBC_DE_res,file ='NRBC_DE_analysis/DE_marker/HSPC_derived_nRBC_wholelevel_RNA_markers.rds' )
 
-# 基因信息中挑选具有特异性的marker
+# 基因信息中挑选具有特异性的 marker , 排除非已知RNA，anti-mRNA
 
 top_gene_markers_HSPC_derived_NRBC=HSPC_derived_NRBC_DE_res[-grep('^AC[0-9]|CH507-|^LIN',HSPC_derived_NRBC_DE_res$gene),] %>% filter(avg_log2FC>1 & pct.2 < 0.2 & pct.1 > 0.2) %>% group_by(cluster)  %>%top_n(wt=avg_log2FC,10)# %>%  do(head(., n = 10))
 top_gene_markers_HSPC_derived_NRBC=top_gene_markers_HSPC_derived_NRBC[order(top_gene_markers_HSPC_derived_NRBC$cluster,top_gene_markers_HSPC_derived_NRBC$avg_log2FC,decreasing = T),]
@@ -1595,7 +1332,7 @@ p
 #U2AF1 是一个在RNA剪接中扮演核心角色的基因，其编码的蛋白是剪接体组装过程中的一个关键通用剪接因子。
 # SLX1A/SLX1B DNA结构特异性修复。DNA完整性的维持是基础，但其激活具有应激性（如复制压力），表达可能不像核糖体基因那样绝对恒定，在其他来源FL中也表达
 VlnPlot(UCB_NRBC_altas,group.by = 'celltype',features = top_gene_markers_HSPC_derived_NRBC$gene[top_gene_markers_HSPC_derived_NRBC$cluster=='FBM'],stack = T,split.by = 'type')
-
+# 不特意，剔除
 del_gene=c('EIF3C','EIF3CL','U2AF1','ATP6V0C','DDTL','BOLA2','BOLA2B','U2AF1L5','GET4','SMN1','SMN2','SLX1A','SLX1B', "SBF2-AS1",'PHOSPHO1')#  "SBF2-AS1" anti-mRNA, RGS6 表达太低
 FBM_unique_genes=top_gene_markers_HSPC_derived_NRBC[!top_gene_markers_HSPC_derived_NRBC$gene %in% del_gene & top_gene_markers_HSPC_derived_NRBC$cluster=='FBM', ]$gene
 
@@ -1636,7 +1373,7 @@ fetal_unique_marker_genes$score=log2(fetal_unique_marker_genes$score+1)
 fetal_unique_marker_genes=fetal_unique_marker_genes[order(fetal_unique_marker_genes$score,-1*fetal_unique_marker_genes$avg_log2FC,decreasing = T),]
 fetal_unique_marker_genes=fetal_unique_marker_genes[!fetal_unique_marker_genes$gene %in% top_gene_markers_HSPC_derived_NRBC$gene , ]
 dim(fetal_unique_marker_genes)# 133
-saveRDS(fetal_unique_marker_genes,file = 'Protein_NRBC_marker/res_data/main_figure3/fetal_unique_marker_genes.rds')
+saveRDS(fetal_unique_marker_genes,file = 'NRBC_DE_analysis/res_data/main_figure3/fetal_unique_marker_genes.rds')
 
 DotPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =unique(fetal_unique_marker_genes$gene)[1:40],cols = c('gray','firebrick3'),scale = F)+RotatedAxis() #   colorRampPalette(colors = c('gray','firebrick3'))(100)
 VlnPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =unique(fetal_unique_marker_genes$gene)[1:20],stack = T)
@@ -1651,7 +1388,7 @@ top_fetal_unique_marker_genes=c('HBG1','HBG2','HBZ', "TUBB6","HSPA1A","HSPA1B",'
 p=DotPlot(subset(filt_NBRC_altas_seu,NRBC_type=='definitive'),group.by = 'source_celltype',features =c(FL_top10_markers,FBM_unique_genes,
           top_fetal_unique_marker_genes,ABM_cho_topmarkers),cols = c('gray','firebrick3'),scale = F)+RotatedAxis() #   colorRampPalette(colors = c('gray','firebrick3'))(100)
 p
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure3/top_marker_HSPC_derived_nRBC.pdf',width = 16,height = 8)
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure3/top_marker_HSPC_derived_nRBC.pdf',width = 16,height = 8)
 
 
 # FL/FBM nRBC 在整体水平上缺乏特异maker，进一步在亚类水平比较,已经在整体水平找到少量FL 分子印记marker
@@ -1682,7 +1419,7 @@ if(F){
   high_FL_subcelltype_Ery_markers=high_FL_subcelltype_Ery_markers[high_FL_subcelltype_Ery_markers$gene %in% left_high_FL_subcelltype_Ery_markers, ]
   top_high_FL_subcelltype_Ery_markers=names(sort(rowMaxs(as.matrix(celltype_mexp_df[unique(high_FL_subcelltype_Ery_markers$gene),10:19])),decreasing = F))
   
-  # 除了前三个基因，其他都有表达，FL 面对FBM、ABM缺乏特异表达marker，有特异表达蛋白有三个：AFP，SERPINA1，APOA1
+  # 除了前三个基因，其他都有表达，FL 面对FBM、ABM缺乏特异表达marker，有FL特异表达蛋白有三个：AFP，SERPINA1，APOA1
   DotPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =top_high_FL_subcelltype_Ery_markers,cols = c('gray','firebrick3'),scale = F)+RotatedAxis() #   colorRampPalette(colors = c('gray','firebrick3'))(100)
   top_high_FL_subcelltype_Ery_markers=top_high_FL_subcelltype_Ery_markers[1:3]
   DotPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =top_high_FL_subcelltype_Ery_markers,cols = c('gray','firebrick3'),scale = F)+RotatedAxis() #   colorRampPalette(colors = c('gray','firebrick3'))(100)
@@ -1695,7 +1432,7 @@ HSPC_nRBC_enrichgo_res=compareCluster(geneClusters =list('FL'=unique(HSPC_derive
                                                'FBM'=unique(HSPC_derived_NRBC_DE_res[HSPC_derived_NRBC_DE_res$cluster=='FBM'& HSPC_derived_NRBC_DE_res$avg_log2FC >0,'gene']),
                                                'ABM'=unique(HSPC_derived_NRBC_DE_res[HSPC_derived_NRBC_DE_res$cluster=='ABM'& HSPC_derived_NRBC_DE_res$avg_log2FC >0,'gene']) ),keyType = 'ALIAS',ont = "BP",
                             fun = 'enrichGO',  OrgDb='org.Hs.eg.db' )
-saveRDS(HSPC_nRBC_enrichgo_res,file = 'Protein_NRBC_marker/res_data/main_figure3/HSPC_nRBC_enrichgo_res.rds')
+saveRDS(HSPC_nRBC_enrichgo_res,file = 'NRBC_DE_analysis/res_data/main_figure3/HSPC_nRBC_enrichgo_res.rds')
 
 p=dotplot(HSPC_nRBC_enrichgo_res,showCategory=10);p
 # ggplot美化
@@ -1705,11 +1442,11 @@ top10_enrichgo_res_df$Description=factor(top10_enrichgo_res_df$Description,level
 p=ggplot(top10_enrichgo_res_df,aes(x=Cluster,y=Description,color=-log10(p.adjust),size=ratio))+geom_point()+theme_bw()+scale_color_gradient(low = '#4387B5',high = 'firebrick3')
 p 
 
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure3/comapreenrichGO_HSPC_derived_nRBC.pdf',width = 8,height = 10)
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure3/comapreenrichGO_HSPC_derived_nRBC.pdf',width = 8,height = 10)
 
 
 
-#------------------------------------------------------ HSPC_derived fetal vs adult DE analysis---------------------------------------------------#
+#------------------------------------------------------stage comparasion: HSPC_derived fetal vs adult DE analysis---------------------------------------------------#
 if(F){
   # fetal NRBC: YS、FL、FBM，三个阶段各抽取1:1:1的细胞，构成early、mid、late NRBC， 与整体不抽样分析，结果差异很小
   
@@ -1751,10 +1488,10 @@ if(F){
   Idents(subset_filt_NBRC_altas_seu)='type_stage'
   subset_filt_NBRC_altas_seu$source_celltype=factor(subset_filt_NBRC_altas_seu$source_celltype,levels =c( "FL_BFUE/CFUE","FL_ProE","FL_Bas","FL_Poly", "FL_Orth","FBM_BFUE/CFUE","FBM_ProE","FBM_Bas","FBM_Poly",  "FBM_Orth",
                                                                                                           "ABM_BFUE/CFUE", "ABM_ProE","ABM_Bas","ABM_Poly","ABM_Orth") )
-  saveRDS(subset_filt_NBRC_altas_seu,file = 'Protein_NRBC_marker/res_data/temp_subset_filt_NBRC_altas_seu.rds')
+  saveRDS(subset_filt_NBRC_altas_seu,file = 'NRBC_DE_analysis/res_data/temp_subset_filt_NBRC_altas_seu.rds')
   
 }else{
-  subset_filt_NBRC_altas_seu=readRDS('Protein_NRBC_marker/res_data/temp_subset_filt_NBRC_altas_seu.rds')
+  subset_filt_NBRC_altas_seu=readRDS('NRBC_DE_analysis/res_data/temp_subset_filt_NBRC_altas_seu.rds')
 }
 
 
@@ -1766,7 +1503,7 @@ names(fetal_marker_list)=fetal_adult_NRBC_whole_marker[fetal_adult_NRBC_whole_ma
 fetal_marker_list=sort(fetal_marker_list,decreasing = T)
 fetal_adult_gsego_res=gseGO(geneList = fetal_marker_list,OrgDb = org.Hs.eg.db,ont = 'BP',keyType = 'ALIAS')
 dotplot(fetal_adult_gsego_res)
-saveRDS(fetal_adult_gsego_res,file='Protein_NRBC_marker/res_data/main_figure3/wholelevel_fetal_adult_gsego_res.rds')
+saveRDS(fetal_adult_gsego_res,file='NRBC_DE_analysis/res_data/main_figure3/wholelevel_fetal_adult_gsego_res.rds')
 
 fetal_adult_gsego_res_df=fetal_adult_gsego_res@result;fetal_adult_gsego_res_df$res='up';fetal_adult_gsego_res_df$res[fetal_adult_gsego_res_df$NES <0]='down'
 fetal_adult_gsego_res_df=fetal_adult_gsego_res_df[fetal_adult_gsego_res_df$p.adjust <0.05,] %>% group_by(res) %>% do(head(.,10))
@@ -1774,13 +1511,13 @@ fetal_adult_gsego_res_df=fetal_adult_gsego_res_df[order(fetal_adult_gsego_res_df
 fetal_adult_gsego_res_df$Description=factor(fetal_adult_gsego_res_df$Description,levels = fetal_adult_gsego_res_df$Description)
 p=ggplot(fetal_adult_gsego_res_df,aes(x=res,y=Description,size=-log(p.adjust),color=NES))+geom_point()+theme_bw()+scale_color_gradient(low = '#4387B5',high = 'firebrick3')+ggtitle(label = 'Fetal vs Adult')
 p
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure3/top10_fetal_adult_gseGO.pdf',width = 6,height = 6)
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure3/top10_fetal_adult_gseGO.pdf',width = 6,height = 6)
 
 
 
 Idents(subset_filt_NBRC_altas_seu)='type_stage'
 group='fetal_adult'
-sfile='Protein_NRBC_marker/DE_marker/fetal_adult_all_Ery_RNA_markers.csv'
+sfile='NRBC_DE_analysis/DE_marker/fetal_adult_all_Ery_RNA_markers.csv'
 res=find_mDEGs_func(seu = subset(subset_filt_NBRC_altas_seu,type_stage %in% c('fetal','adult')),group = group,sfile = sfile)
 sub_fetal_adult_all_Ery_tissue_markers=res[[1]]
 sub_fetal_addult_count_df=res[[2]]
@@ -1799,7 +1536,7 @@ DotPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',top_late_positive_sub_f
 ABM_cho_topmarkers=c(ABM_cho_topmarkers[1:9],'LGALS3',ABM_cho_topmarkers[10:12])
 p=DotPlot(filt_NBRC_altas_seu,group.by = 'source_celltype',features =c(FL_top10_markers,FBM_unique_genes,top10_fetal_unique_marker_genes,ABM_cho_topmarkers),cols = c('gray','firebrick3'),scale = F)+RotatedAxis() #   colorRampPalette(colors = c('gray','firebrick3'))(100)
 p
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure3/top_marker_HSPC_derived_nRBC.pdf',width = 16,height = 8)
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure3/top_marker_HSPC_derived_nRBC.pdf',width = 16,height = 8)
 
 
 fetal_positive_all_Ery_tissue_markers=sub_fetal_adult_all_Ery_tissue_markers[sub_fetal_adult_all_Ery_tissue_markers$cluster=='fetal',]
@@ -1818,14 +1555,14 @@ top_fetal_unique_marker_genes=c(top_fetal_unique_marker_genes[1:9],'MEG3','GATA5
 defintive_markers=list(FL_top10_markers=FL_top10_markers,FBM_unique_genes=FBM_unique_genes,top_fetal_unique_marker_genes=top_fetal_unique_marker_genes,ABM_cho_topmarkers=ABM_cho_topmarkers)
 p=DotPlot(subset(filt_NBRC_altas_seu,NRBC_type=='definitive'),group.by = 'source_celltype',features =as.character(unlist(defintive_markers)),cols = c('gray','firebrick3'),scale = F)+RotatedAxis() #   colorRampPalette(colors = c('gray','firebrick3'))(100)
 p
-ggsave(p,filename='Protein_NRBC_marker/res_pic/main_figure3/top_marker_HSPC_derived_nRBC.pdf',width = 16,height = 8)
+ggsave(p,filename='NRBC_DE_analysis/res_pic/main_figure3/top_marker_HSPC_derived_nRBC.pdf',width = 16,height = 8)
 
-saveRDS(defintive_markers,file = 'Protein_NRBC_marker/res_data/main_figure3/defintive_markers.rds')
+saveRDS(defintive_markers,file = 'NRBC_DE_analysis/res_data/main_figure3/defintive_markers.rds')
 
 
 sub_fetal_adult_subcelltype_gseGO_list=subcelltype_gseGO_func(RNA_markers =sub_fetal_adult_all_Ery_tissue_markers[sub_fetal_adult_all_Ery_tissue_markers$cluster=='fetal',] )
 sub_fetal_adult_subcelltype_gseGO_list[[2]]$group='fetal_adult'
-saveRDS(sub_fetal_adult_subcelltype_gseGO_list,file = 'Protein_NRBC_marker/res_data/main_figure2/sub_fetal_adult_subcelltype_gseGO_list.rds')
+saveRDS(sub_fetal_adult_subcelltype_gseGO_list,file = 'NRBC_DE_analysis/res_data/main_figure2/sub_fetal_adult_subcelltype_gseGO_list.rds')
 
 top_sub_fetal_adult_subcelltype_gseGO_df=sub_fetal_adult_subcelltype_gseGO_list[[2]]
 top_sub_fetal_adult_subcelltype_gseGO_df=top_sub_fetal_adult_subcelltype_gseGO_df[top_sub_fetal_adult_subcelltype_gseGO_df$ONTOLOGY=='BP', ]
@@ -1842,7 +1579,7 @@ p5=ggplot(top_sub_fetal_adult_subcelltype_gseGO_df,aes(x=celltype,y=Description,
   theme_bw()+theme(axis.text.x = element_text(angle = 45,hjust = 1,face = 'bold'))+ggtitle('fetal vs adult nRBC:gseGO of DEGs')
 p5
 
-ggsave(p5,width =6 ,height =8,filename='Protein_NRBC_marker/res_pic/main_figure3/DEGS_gseGOBP_fetal_adult_dotplot.pdf' )
+ggsave(p5,width =6 ,height =8,filename='NRBC_DE_analysis/res_pic/main_figure3/DEGS_gseGOBP_fetal_adult_dotplot.pdf' )
 
 
 sort(unique(top_sub_fetal_adult_subcelltype_gseGO_df$Description))
@@ -1863,7 +1600,7 @@ VlnPlot(subset(filt_NBRC_altas_seu,tissue_stage %in% c('FL','FBM','ABM')),group.
 #------------------------分组单独比较-----------------------------------#
 gc()
 group='FL_FBM'
-sfile='Protein_NRBC_marker/DE_marker/FL_FBM_all_Ery_RNA_markers.csv'
+sfile='NRBC_DE_analysis/DE_marker/FL_FBM_all_Ery_RNA_markers.csv'
 res=find_mDEGs_func(seu = subset(filt_NBRC_altas_seu,tissue_stage %in% c('FL','FBM')),group = group,sfile = sfile)
 FL_FBM_all_Ery_tissue_markers=res[[1]]
 FL_FBM_count_df=res[[2]]
@@ -1871,7 +1608,7 @@ rm(res);gc()
 # FL 与FBM吧nRBC 更为相似可能是导致FL nRBC 相较于BM nRBC无显著差异基因的原因 
 
 group='FL_ABM'
-sfile='Protein_NRBC_marker/DE_marker/FL_ABM_all_Ery_RNA_markers.csv'
+sfile='NRBC_DE_analysis/DE_marker/FL_ABM_all_Ery_RNA_markers.csv'
 res=find_mDEGs_func(seu = subset(filt_NBRC_altas_seu,tissue_stage %in% c('FL','ABM')),group = group,sfile = sfile)
 FL_ABM_all_Ery_tissue_markers=res[[1]]
 FL_ABM_count_df=res[[2]]
@@ -1879,13 +1616,13 @@ rm(res);gc()
 
 
 group='FBM_ABM'
-sfile='Protein_NRBC_marker/DE_marker/ABM_FBM_all_Ery_RNA_markers.csv'
+sfile='NRBC_DE_analysis/DE_marker/ABM_FBM_all_Ery_RNA_markers.csv'
 res=find_mDEGs_func(seu = subset(filt_NBRC_altas_seu,tissue_stage %in% c('FBM','ABM')),group = group,sfile = sfile)
 FBM_ABM_all_Ery_tissue_markers=res[[1]]
 FBM_ABM_count_df=res[[2]]
 rm(res);gc()
 
-# FBM中组蛋白表达太高，影响富集结果 
+# FBM中组蛋白表达太高，影响富集结果 ，剔除
 FL_FBM_all_Ery_tissue_markers=FL_FBM_all_Ery_tissue_markers[!FL_FBM_all_Ery_tissue_markers$gene %in% names(HIS_genes),]
 FBM_ABM_all_Ery_tissue_markers=FBM_ABM_all_Ery_tissue_markers[!FBM_ABM_all_Ery_tissue_markers$gene %in% names(HIS_genes),]
 
@@ -1904,8 +1641,8 @@ degs_gseGO_res_df2=rbind(degs_gseGO_res_df2,rbind(FL_FBM_subcelltype_gseGO_list[
 ABM_FBM_subcelltype_gseGO_list=subcelltype_gseGO_func(RNA_markers =FBM_ABM_all_Ery_tissue_markers[FBM_ABM_all_Ery_tissue_markers$cluster=='FBM',] ,keyType = 'ALIAS' )
 ABM_FBM_subcelltype_gseGO_list[[2]]$group='FBM_ABM'
 degs_gseGO_res_df2=rbind(degs_gseGO_res_df2,ABM_FBM_subcelltype_gseGO_list[[2]])
-#write.csv(degs_gseGO_res_df2,file = 'Protein_NRBC_marker/res_data/main_figure1/tissue_nRBC_degs_gseGO_res_df2.csv') # symbol
-write.csv(degs_gseGO_res_df2,file = 'Protein_NRBC_marker/res_data/main_figure3/HSPC_derived_nRBC_degs_gseGO_res_df2_ALIAS.csv')
+#write.csv(degs_gseGO_res_df2,file = 'NRBC_DE_analysis/res_data/main_figure1/tissue_nRBC_degs_gseGO_res_df2.csv') # symbol
+write.csv(degs_gseGO_res_df2,file = 'NRBC_DE_analysis/res_data/main_figure3/HSPC_derived_nRBC_degs_gseGO_res_df2_ALIAS.csv')
 
 degs_gseGO_res_df2=degs_gseGO_res_df2[degs_gseGO_res_df2$ONTOLOGY=='BP',]   
 degs_gseGO_res_df2$group=factor(degs_gseGO_res_df2$group,levels = c('FL_FBM','FL_ABM','FBM_ABM'))
@@ -1941,7 +1678,7 @@ p4=ggplot(temp_df,aes(x=celltype,y=Description,color=NES,size=-log10( p.adjust))
 p4
 
 p=p2+p3+p4;p
-ggsave(p,width =22 ,height =12,filename='../Protein_NRBC_marker/res_pic/main_figure3/DEGS_gseGOBP_substate_FL_FBM_ABM_dotplot.pdf' )
+ggsave(p,width =22 ,height =12,filename='../NRBC_DE_analysis/res_pic/main_figure3/DEGS_gseGOBP_substate_FL_FBM_ABM_dotplot.pdf' )
 
 ###################### 分析通路中的核心驱动基因的表达，发现血管发育核心驱动基因以及凝血调控核心驱动基因中大部分（103/130，75/95）在FL 痕量表达（pct <0.1）, 
 #剩余基因基因中除了NR4A1、GPX1和SERPINEA1，其他基因在FL 与FBM NRBC 的表达模式基本一致#
@@ -2015,7 +1752,7 @@ saveRDS(filt_NBRC_altas_seu@meta.data[,c('angiogenesis_UCell','blood_vessel_morp
 p=VlnPlot(subset(filt_NBRC_altas_seu,tissue_stage %in% c('FL','FBM','ABM')),group.by = 'source_celltype',stack = T,cols = cols,
         features = c('angiogenesis_UCell','blood_vessel_morphogenesis_UCell','endothelial_cell_migration_UCell','coagulation_UCell', paste0(names(gene_sets),'_UCell')))
 
-ggsave(p,filename = 'Protein_NRBC_marker/res_pic/main_figure3/key_pathway_UCell_score_definitive_nRBC_vlnplot.pdf',width = 10,height = 10)
+ggsave(p,filename = 'NRBC_DE_analysis/res_pic/main_figure3/key_pathway_UCell_score_definitive_nRBC_vlnplot.pdf',width = 10,height = 10)
 
 
 #---------------------------the ratio of cell cycle phase--------------------------------# 
@@ -2047,7 +1784,7 @@ for( celltype in unique(phase_stats_by_sample$final_celltype)){
   print(table(phase_stats_by_sample[phase_stats_by_sample$total >10 & phase_stats_by_sample$Phase=='G1' &phase_stats_by_sample$final_celltype==celltype ,'tissue_stage']))
 }
 
-ggsave(p_final,filename = 'Protein_NRBC_marker/res_pic/main_figure3/definitive_G1_phase_wilcox_test.pdf',height = 6,width = 18)
+ggsave(p_final,filename = 'NRBC_DE_analysis/res_pic/main_figure3/definitive_G1_phase_wilcox_test.pdf',height = 6,width = 18)
 
 p_final <- ggplot(phase_stats_by_sample[phase_stats_by_sample$total >10 & phase_stats_by_sample$Phase=='S',], aes(x = tissue_stage, y = proportion, fill = tissue_stage)) +
   geom_boxplot(width = 0.6, outlier.shape = 19, outlier.size = 1,alpha=0.7) +
@@ -2060,7 +1797,7 @@ p_final <- ggplot(phase_stats_by_sample[phase_stats_by_sample$total >10 & phase_
 
 print(p_final)
 
-ggsave(p_final,filename = 'Protein_NRBC_marker/res_pic/main_figure3/definitive_S_phase_wilcox_test.pdf',height = 6,width = 18)
+ggsave(p_final,filename = 'NRBC_DE_analysis/res_pic/main_figure3/definitive_S_phase_wilcox_test.pdf',height = 6,width = 18)
 
 
 p_final <- ggplot(phase_stats_by_sample[phase_stats_by_sample$total >10 & phase_stats_by_sample$Phase=='G2M',], aes(x = tissue_stage, y = proportion, fill = tissue_stage)) +
@@ -2074,90 +1811,5 @@ p_final <- ggplot(phase_stats_by_sample[phase_stats_by_sample$total >10 & phase_
 
 print(p_final)
 
-ggsave(p_final,filename = 'Protein_NRBC_marker/res_pic/main_figure3/definitive_G2M_phase_wilcox_test.pdf',height = 6,width = 18)
-
-Idents(filt_NBRC_altas_seu)='source_celltype'
-VlnPlot(filt_NBRC_altas_seu,features = c('CCNB1','CDK1'),pt.size = 0,split.by = 'tissue_stage',stack = T)
-
-
-######################################################################################################################################################
-#----------------bulk RNAseq validated the marker expression
-######################################################################################################################################################
-#-----------------------体外期脐带血Ery1：Ery4，Ery5：成人外周血
-defintive_markers=readRDS('Protein_NRBC_marker/res_data/main_figure3/defintive_markers.rds')
-load('/home/gibh/2021_NRBC_chlyu/ref_data/hema_ref_bullk_RNAseq_se.Rdata',verbose = T)
-Ery_annotation_df=data.frame(hema.se@colData[grep('Ery',hema.se@colData$celltype),])
-Ery_count_df=data.frame(hema.se@assays@data$logcounts[,rownames(Ery_annotation_df)])
-Ery_count_df[as.character(unlist(defintive_markers))[ !as.character(unlist(defintive_markers))%in%  rownames(Ery_count_df)],colnames(Ery_count_df)]=0
-
-symbol_an_df=data.frame(row.names = as.character(unlist(defintive_markers)),type=rep(names(sapply(defintive_markers, length)),as.numeric(sapply(defintive_markers, length))))
-p=pheatmap(Ery_count_df[as.character(unlist(defintive_markers)),],cluster_rows = F,cluster_cols = F,show_colnames = F,annotation_row = symbol_an_df,
-         color = colorRampPalette(colors = c('white','firebrick3'))(100),annotation_col = Ery_annotation_df[,c('label.fine','celltype')])
-ggsave(as.ggplot(p),filename = 'Protein_NRBC_marker/res_pic/main_figure3/definitive_marker_expression_UCB_PBMC_bulkRNAseq_heatmap.pdf',width = 8,height = 8)
-
-FL_ABM_nRBC_df_refer_control_df=readRDS('ref_data/bulk_RNAseq/nr_FL_ABM_nRBC_ref_ACTB.rds')
-FL_ABM_nRBC_df_df=readRDS('ref_data/bulk_RNAseq/FL_ABM_nRBC_df_df_nr_exp.rds')
-
-p=pheatmap(FL_ABM_nRBC_df_refer_control_df[c('ACTB', as.character(unlist(defintive_markers))),-grep('MM|thy_ery',colnames(FL_ABM_nRBC_df_refer_control_df))],cluster_rows = F,cluster_cols = F,annotation_row = symbol_an_df,
-         color = colorRampPalette(colors = c('white','firebrick3'))(100))
-ggsave(as.ggplot(p),filename = 'Protein_NRBC_marker/res_pic/main_figure3/definitive_marker_expression_FL_ABM_bulkRNAseq_heatmap.pdf',width = 8,height = 8)
-
-MHC_genes=c("B2M","HLA-A","HLA-B","HLA-C","HLA-E","CD74","HLA-DMA","HLA-DMB","HLA-DOA","HLA-DOB","HLA-DPA1","HLA-DPB1","HLA-DQA1", "HLA-DQB1" ,"HLA-DQB2" ,"HLA-DRA" ,"HLA-DRB1","HLA-DRB4", "HLA-DRB5","HLA-DRB6","TAPBP") # order, and cho
-peptide_load=c('TAPBP','TAP1','TAP2','PDIA3','ERAP1')
-Proteasome_genes=rownames(Ery_count_df)[grep('PSMB',rownames(Ery_count_df))]
-Proteasome_genes
-Proteasome_genes=c(Proteasome_genes[1],Proteasome_genes[3:10],Proteasome_genes[2])
-# CIITA（MHC-II和共刺激分子主调控因子）
-co_stimulatory =c('CIITA','CD86','CD80','ICOSLG','CD40','OX40L', 'TNFSF4', 'TNFSF9', 'TNFSF14', 'TNFSF18')
-co_inhibtor=c('CD274', 'PDCD1LG2', 'CD276', 'VTCN1', 'HHLA2', 'IDO1')
-
-all_antigen_process_genes=unique(c(MHC_genes,peptide_load,Proteasome_genes,co_stimulatory,co_inhibtor))
-p=pheatmap(Ery_count_df[all_antigen_process_genes[all_antigen_process_genes %in% rownames(Ery_count_df)],],
-         cluster_rows = F,cluster_cols = F,show_colnames = F,annotation_col = Ery_annotation_df[,c('label.fine','celltype')],color = colorRampPalette(colors = c('white','firebrick3'))(100))
-ggsave(as.ggplot(p),filename = 'Protein_NRBC_marker/res_pic/main_figure3/MHC_peptide_load_gene_expression_UCB_bulkRNAseq_heatmap.pdf',width = 8,height = 8)
-
-p=pheatmap(FL_ABM_nRBC_df_refer_control_df[c('ACTB',all_antigen_process_genes[all_antigen_process_genes %in% rownames(FL_ABM_nRBC_df_refer_control_df)]),-grep('MM|thy_ery',colnames(FL_ABM_nRBC_df_refer_control_df))],
-           cluster_rows = F,cluster_cols = F,show_colnames = T,color = colorRampPalette(colors = c('white','firebrick3'))(100))
-
-ggsave(as.ggplot(p),filename = 'Protein_NRBC_marker/res_pic/main_figure3/MHC_peptide_load_gene_expression_FL_ABM_bulkRNAseq_heatmap.pdf',width = 8,height = 8)
-
-
-
-
-
-# ---------------------查看之前购买marker的表达情况-------------------------#
-if(F){
-  buy_antiobody_genes=c('CD81','CD109','DLK1','PDZK1IP1','CXCR4','IGF1R','ALCAM','IL3RA','ITGAV','SEMA4D') #CXCR4,CD221,CD166,CD123,CD51,CD100
-  DotPlot(filt_NBRC_altas_seu,features =buy_antiobody_genes,scale = F,group.by = 'source_celltype')+RotatedAxis()+scale_color_gradient2(low = 'blue',mid = 'gray',high = 'firebrick3')
-  
-  ABM_altas_seu=readRDS('NRBC_BM_altas/tmp_ABM_altas_seu_new.rds')
-  ABM_altas_NRBC_seu=subset(ABM_altas_seu,subcelltype %in% c('Bas','BFUE/CFUE','Orth','Poly','ProE'))
-  ABM_altas_NRBC_seu$subcelltype=factor(ABM_altas_NRBC_seu$subcelltype,levels = c('BFUE/CFUE','ProE','Bas','Poly','Orth'))
-  subset(ABM_altas_NRBC_seu,subset=IGKC >1) #3737 
-  
-  table(subset(ABM_altas_NRBC_seu,subset=IGKC >1)$subcelltype)# 主要是Bas和BFUE/CFUE
-  #Bas BFUE/CFUE      Orth      Poly      ProE 
-  #2068      1162       152        57       298 
-  
-  ABM_altas_NRBC_seu$IGHC='negtive'
-  ABM_altas_NRBC_seu$IGHC[rownames(ABM_altas_NRBC_seu@meta.data) %in% colnames(subset(ABM_altas_NRBC_seu,subset=IGKC >1))]='positive'
-  VlnPlot(ABM_altas_NRBC_seu,features =buy_antiobody_genes,group.by = 'subcelltype',split.by = 'IGHC',stack = T)
-  
-  
-  
-  pheatmap(GSE301441_BM_NRBC_df[buy_antiobody_genes[buy_antiobody_genes %in% rownames(GSE301441_BM_NRBC_df)],],cluster_cols = F,cluster_rows = F,main = 'ABM')
-  pheatmap(FL_primary_NRBC_df[buy_antiobody_genes[buy_antiobody_genes %in% rownames(FL_primary_NRBC_df) ],],cluster_cols = F,cluster_rows = F,main = 'FL')
-  
-  pheatmap(FL_ABM_nRBC_df_refer_control_df[c(buy_antiobody_genes[buy_antiobody_genes %in% rownames(FL_ABM_nRBC_df_refer_control_df)] ,'ACTB'),], 
-           labels_row = c("CD81","CD109","DLK1","PDZK1IP1",'CXCR4','CD221','CD166','CD123','CD51','CD100','ACTB'),
-           cluster_cols = F,cluster_rows = F,main = 'FL/ABM refer_ACTB_as_control')
-  
-  
-  
-}
-
-
-
-
-
+ggsave(p_final,filename = 'NRBC_DE_analysis/res_pic/main_figure3/definitive_G2M_phase_wilcox_test.pdf',height = 6,width = 18)
 
