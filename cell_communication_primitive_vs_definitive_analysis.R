@@ -485,98 +485,14 @@ write.table(Other2Ery_df,file = 'res_data/filt_Other2Ery_df_new.csv',quote = F,s
 #------------------------------------part2: analysis   interactioin  across niches & primitive vs definitiive----------------------#
 ##############################################################################################################################################################################
 
-NRBC_altas_LR_df=read.csv('res_data/filt_NRBC_altas_LR_df.csv',sep="\t")
-Other2Ery_df=read.csv('res_data/filt_Other2Ery_df_new.csv',sep="\t")
-
-
-# ----------------------incoming LR--------------------------#
-the_incoming_LR_list=list('YS'=sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='YS'  & NRBC_altas_LR_df$target_type =='Other2Ery','interaction_name'])),
-                            'FL'= sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='FL'  & NRBC_altas_LR_df$target_type =='Other2Ery','interaction_name'])),
-                            'FBM'=sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='FBM'& NRBC_altas_LR_df$target_type =='Other2Ery','interaction_name'])),
-                            'ABM'=sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='ABM'& NRBC_altas_LR_df$target_type =='Other2Ery','interaction_name']))
-)
-  
-library(VennDiagram)
-p=venn.diagram(x =the_incoming_LR_list,filename = NULL,fill=cols[1:4], scaled = T ,main ='incoming LR')
-dev.off()
-grid.draw(p)
-  
-veen_res=get.venn.partitions(the_incoming_LR_list)
-incoming_LR_type_df=data.frame(LR=unique(unlist(the_incoming_LR_list)))
-incoming_LR_type_df$type='un'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[1]]  ]='01_shared' # 4,3,2,1
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[2]]  ]='02_definitive'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[3]]  ]='04_no_FL'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[4]]  ]='10_BM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[5]]  ]='05_no_FBM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[6]]  ]='09_FL_ABM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[7]]  ]='15_YS_ABM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[8 ]] ]='14_ABM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[9 ]] ]='03_fetal_all'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[10]] ]='08_fetal_FLFBM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[11]] ]='07_YS_FBM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[12]] ]='13_FBM'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[13]] ]='06_YS_FL'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[14]] ]='12_FL'
-incoming_LR_type_df$type[incoming_LR_type_df$LR %in% veen_res$..values..[[15]] ]='11_YS'
-incoming_LR_type_df_list=split(incoming_LR_type_df$LR,incoming_LR_type_df$type)
-
-  
-  # outgoing LR
-the_outgoing_LR_list=list('YS'= sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='YS'  & NRBC_altas_LR_df$target_type =='Ery2Other','interaction_name'])),
-                            'FL'= sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='FL'  & NRBC_altas_LR_df$target_type =='Ery2Other','interaction_name'])),
-                            'FBM'=sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='FBM'& NRBC_altas_LR_df$target_type =='Ery2Other','interaction_name'])),
-                            'ABM'=sort(unique(NRBC_altas_LR_df[NRBC_altas_LR_df$stage=='ABM'& NRBC_altas_LR_df$target_type =='Ery2Other','interaction_name']))
-)
-  
-library(VennDiagram)
-p=venn.diagram(x =the_outgoing_LR_list,filename = NULL,fill=cols[1:4], scaled = T ,main = 'outgoning LR')
-dev.off()
-grid.draw(p)
-
-veen_res=get.venn.partitions(the_outgoing_LR_list)
-outgoing_LR_type_df=data.frame(LR=unique(unlist(the_outgoing_LR_list)))
-outgoing_LR_type_df$type='un'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[1]]  ]='01_shared' # 4,3,2,1
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[2]]  ]='02_definitive'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[3]]  ]='04_no_FL'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[4]]  ]='10_BM'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[5]]  ]='05_no_FBM'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[6]]  ]='09_FL_ABM'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[8 ]] ]='14_ABM'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[9 ]] ]='03_fetal_all'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[10]] ]='08_fetal_FLFBM'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[11]] ]='07_YS_FBM'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[12]] ]='13_FBM'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[13]] ]='06_YS_FL'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[14]] ]='12_FL'
-outgoing_LR_type_df$type[outgoing_LR_type_df$LR %in% veen_res$..values..[[15]] ]='11_YS'
-outgoing_LR_type_df_list=split(outgoing_LR_type_df$LR,outgoing_LR_type_df$type)
-  
-
-saveRDS(incoming_LR_type_df_list,file = 'res_data/incoming_LR_type_df_list.rds')
-saveRDS(outgoing_LR_type_df_list,file = 'res_data/outgoing_LR_type_df_list.rds')
-
-
-
-################################################################################################################################################################
-#################-----------------------check the expression level in conserved LR -------------------------------------------------------#
-################################################################################################################################################################
-
+#################-----------------------2.1 check the expression level in conserved LR -------------------------------------------------------#
 
 setwd('NRBC_altas_CC')
-
 NRBC_subcelltype=c("BFUE/CFUE","ProE","Bas","Poly","Orth" )
+NRBC_altas_LR_df$stage=factor(NRBC_altas_LR_df$stage,levels = c('YS','FL','FBM','ABM'))
+NRBC_altas_LR_df$celltype=factor(NRBC_altas_LR_df$celltype,levels = NRBC_subcelltype)
 
-if(F){
-    NRBC_altas_LR_df=read.csv('res_data/filt_NRBC_altas_LR_df.csv',sep="\t")
-    NRBC_altas_LR_df$stage=factor(NRBC_altas_LR_df$stage,levels = c('YS','FL','FBM','ABM'))
-    NRBC_altas_LR_df$celltype=factor(NRBC_altas_LR_df$celltype,levels = NRBC_subcelltype)
-    Other2Ery_df=NRBC_altas_LR_df[NRBC_altas_LR_df$target_type=='Other2Ery',]
-    incoming_LR_type_df_list=readRDS('res_data/incoming_LR_type_df_list.rds')
-    outgoing_LR_type_df_list=readRDS('res_data/outgoing_LR_type_df_list.rds')
-}
-
+ 
 filt_NBRC_altas_seu=readRDS('../20251125_filt_NBRC_altas_seu.rds')
 Idents(filt_NBRC_altas_seu)='source_celltype'
 filt_NBRC_altas_seu$pd_celltype='definitive'
@@ -591,12 +507,12 @@ rm(cho_cells)
 
 
 # whole level
-pd_whole_level_markers_degs_df=readRDS('../Protein_NRBC_marker/res_data/pd_whole_level_markers.rds')
-fetal_adult_NRBC_whole_marker=readRDS('../Protein_NRBC_marker/res_data/fetal_adult_NRBC_whole_marker.rds')
+pd_whole_level_markers_degs_df=readRDS('../NRBC_DE_analysis/res_data/pd_whole_level_markers.rds')
+fetal_adult_NRBC_whole_marker=readRDS('../NRBC_DE_analysis/res_data/fetal_adult_NRBC_whole_marker.rds')
 # subcelltype level
-sub_pd_all_Ery_tissue_markers=read.csv('../Protein_NRBC_marker/DE_marker/primitive_definitive_all_Ery_RNA_markers.csv')
+sub_pd_all_Ery_tissue_markers=read.csv('../NRBC_DE_analysis/DE_marker/primitive_definitive_all_Ery_RNA_markers.csv')
 sub_pd_all_Ery_tissue_markers=sub_pd_all_Ery_tissue_markers[,-1]
-sub_fetal_adult_all_Ery_tissue_markers=read.csv('../Protein_NRBC_marker/DE_marker/fetal_adult_all_Ery_RNA_markers.csv')
+sub_fetal_adult_all_Ery_tissue_markers=read.csv('../NRBC_DE_analysis/DE_marker/fetal_adult_all_Ery_RNA_markers.csv')
 sub_fetal_adult_all_Ery_tissue_markers=sub_fetal_adult_all_Ery_tissue_markers[,-1]
 
 
@@ -738,12 +654,9 @@ p2=ggplot(sub_temp_deg_df,aes(x=gene,y=celltype,col=cluster,size=avg_log2FC,alph
 p2
 ggsave(p2,file='res_pic/main_figure4/pd_conserved_incoming_ligands_DE_substage.pdf',width =8 ,height =3 ,dpi = 300)
 
-
-
-################################################################################################################################################################
-#################-----------------------check the expression level of LR in DEGs -------------------------------------------------------#
-###############################################################################################################################################################
-
+#######################################################################################################################################################################################
+#################-----------------------2.2 check the expression level of LR in DEGs: hDEGs-LR, specific LR -------------------------------------------------------#
+#######################################################################################################################################################################################
 
 #  defintiive conserved LR gene: expression level in sub_celltype >0.1 & pct>10 in detected in definitive niche
 LR_celltype_mexp_df=DotPlot(subset(filt_NBRC_altas_seu,tissue_stage!='YS'),features =unique(gsub(pattern = ' ',replacement = '',unique(c(all_NRBC_ligand_genes,all_NRBC_receptor_genes)))))
@@ -1125,7 +1038,7 @@ top_pd_degs=pd_whole_level_markers_degs_df[pd_whole_level_markers_degs_df$avg_lo
 table(top_pd_degs[,c('cluster')])
 #definitive  primitive 
 #346                500
-sub_pd_all_Ery_tissue_markers=read.csv('../Protein_NRBC_marker/DE_marker/primitive_definitive_all_Ery_RNA_markers.csv')
+sub_pd_all_Ery_tissue_markers=read.csv('../NRBC_DE_analysis/DE_marker/primitive_definitive_all_Ery_RNA_markers.csv')
 sub_pd_all_Ery_tissue_maconserved_LR_genesrkers=sub_pd_all_Ery_tissue_markers[,-1]
 top_pd_sub_degs=sub_pd_all_Ery_tissue_markers[sub_pd_all_Ery_tissue_markers$avg_log2FC >1 & sub_pd_all_Ery_tissue_markers$pct.1>0.1  ,]  %>% group_by(cluster,celltype) %>% top_n(wt =avg_log2FC,n = 500 )
 table(top_pd_sub_degs$cluster)
@@ -1302,9 +1215,9 @@ p
 ggsave(p,filename='res_pic/main_figure4/pd_specific_target_gene_expression_dotplot.pdf',width =8 ,height = 5)
 
 
-################################################################################################################################
-#--------------------------part4: expression of key ligand in altas---------------------------------------#
-################################################################################################################################
+####################################################################################################################################################################
+#----------------------------------------part4: expression of key ligand in altas---------------------------------------#
+####################################################################################################################################################################
 cho_feature=c('IGFBP3',"EPO",'APP','MDK')
 FL_altas_seu=readRDS('../NRBC_FL_altas/tmp_FL_altas_seu.rds')
 
@@ -1446,7 +1359,6 @@ ggsave(p,filename='res_pic/main_figure4/key_ligand_expression_stage_YS_vlnplot.p
 
 table(YS_altas_seu@meta.data[YS_altas_seu$subcelltype %in% c("FIBROBLAST","ENDOTHELIUM", "MESOTHELIUM", "SMOOTH_MUSCLE" ),c('stage')])
 table(YS_altas_seu@meta.data[YS_altas_seu$subcelltype=='ENDODERM',c('stage')])
-
 
 
 YS_cho_gene_aggregated_exp=AggregateExpression(YS_altas_seu,features = cho_feature,group.by = 'id')$RNA
