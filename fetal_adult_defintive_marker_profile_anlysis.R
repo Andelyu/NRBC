@@ -295,67 +295,28 @@ ggsave(as.ggplot(p),filename='../Protein_NRBC_marker/res_pic/main_figure6/cellli
 #-------------------------------------validated the DLK1 marker-------------------------#
 ############################################################################################################################################################################
 ####--------------------------sorted CD2351+DRAQ5+  NRBC----------------------------# 
+NRBC_df=read.csv('../zx_lab_NRBC/experiment_data/202606_CD235aDRAQ5_NRBC.csv')
+NRBC_df=data.frame(row.names = NRBC_df$X,mNRBC=NRBC_df$NRBC)
+NRBC_df=log2(cpm(NRBC_df)+1)
 
-
-
-smartseq_NRBC_exp_df=readRDS('../zx_lab_NRBC/experiment_data/normalized_NRBC_smartseq2_genecount.rds')
-pheatmap(smartseq_NRBC_exp_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df) ],1:6],cluster_rows = F,cluster_cols = F)
-
-pheatmap(smartseq_NRBC_exp_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df) ],2:5],cluster_rows = F,cluster_cols = F)
-
-smartseq_NRBC_exp_df2=data.frame(smartseq_NRBC_exp_df[,'mPBMC2_NRBC']);colnames(smartseq_NRBC_exp_df2)='mPBMC1'
-smartseq_NRBC_exp_df2$mPBMC2=rowMeans(smartseq_NRBC_exp_df[,c('mPBMC1_CD81H', 'mPBMC1_CD81L', 'mPBMC1_CD81M')])
-smartseq_NRBC_exp_df2=smartseq_NRBC_exp_df2[rowSums(smartseq_NRBC_exp_df2) >0,]
-
-markers=c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df2) ]
-p1=pheatmap(smartseq_NRBC_exp_df2[markers,],cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
+NRBC_df=data.frame(NRBC_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(NRBC_df) ], ])
+colnames(NRBC_df)='NRBC'
+p1=pheatmap(NRBC_df,cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
 ggsave(as.ggplot(p1),filename='../Protein_NRBC_marker/res_pic/main_figure6/final_candidated_marker_mPBMC_NRBC_heatmap.pdf',width = 3,height =5)
 
-
 Y_spefici_genes=c('SRY','ZFY','TSPY','DYS14','AMELY','RPS4Y1','TTTY15','DAZ1','RBMY','CDY','BPY2','HSFY','XKRY','PRY', 'USP9Y', 'UTY', 'KDM5D','ZFX')
-p2=pheatmap(smartseq_NRBC_exp_df2[Y_spefici_genes[Y_spefici_genes %in% rownames(smartseq_NRBC_exp_df2) ],],cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
-ggsave(as.ggplot(p2),filename='../Protein_NRBC_marker/res_pic/main_figure6/Y_sex_gene_mPBMC_NRBC_heatmap.pdf',width = 3,height =5)
+NRBC_df2=data.frame(NRBC_df[Y_spefici_genes[Y_spefici_genes %in% rownames(NRBC_df) ], ])
+colnames(NRBC_df2)='NRBC' # RPS4Y1,ZFX 性别基因， 妈妈为主
+pheatmap(rbind(NRBC_df1,NRBC_df2),cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
 
-
-# new-------
-samrtseq2_df=read.csv('zx_lab_NRBC/experiment_data/result_20260708_ycl_FACS_NRBC_smartseq2_genecount_new.csv',sep=',')
-samrtseq2_df=samrtseq2_df[rowSums(samrtseq2_df[,3:dim(samrtseq2_df)[2]]) >0,]
-du_samrtseq2_df=samrtseq2_df[duplicated(samrtseq2_df$gene_symbol),]
-
-du_tmp_assay_tmp=data.frame()
-for(symbol in unique(du_samrtseq2_df$gene_symbol)){
-  temp=du_samrtseq2_df[du_samrtseq2_df$gene_symbol == symbol,3:7]
-  temp=t(data.frame(colMaxs(as.matrix(temp))))
-  rownames(temp)=symbol
-  du_tmp_assay_tmp=rbind(du_tmp_assay_tmp,temp)
-}
-
-
-
-samrtseq2_df=samrtseq2_df[!duplicated(samrtseq2_df$gene_symbol),]
-rownames(samrtseq2_df)=samrtseq2_df$gene_symbol
-samrtseq2_df=samrtseq2_df[,3:7]
-samrtseq2_df=rbind(samrtseq2_df,du_tmp_assay_tmp)
-smaple_inf=c('Y1_AApos.2','Y1_AAneg','Y1_FDApos','Y1_FDApos.2','Y1_FDAneg')
-colnames(samrtseq2_df)=smaple_inf
+####--------------------------sorted CD2351+DRAQ5+DLK1+  NRBC----------------------------#
+DLK_pos_NRBC_samrtseq2_df=read.csv('../zx_lab_NRBC/experiment_data/202607_DLK1_pos_NRBC.csv')
+rownames(DLK_pos_NRBC_samrtseq2_df)=DLK_pos_NRBC_samrtseq2_df$X
+DLK_pos_NRBC_samrtseq2_df=DLK_pos_NRBC_samrtseq2_df[,-1]
 
 library(edgeR)
-nr_samrtseq2_df=log2(edgeR::cpm(samrtseq2_df)+1)
-
-cho_gene_samrtseq2_df=nr_samrtseq2_df[rownames(nr_samrtseq2_df) %in% c(top_fetal_marker,adult_markers,'HBD'),]
-cho_gene_samrtseq2_df=cho_gene_samrtseq2_df[c('Y1_FDApos.2', 'Y1_FDAneg'),]
-pheatmap(cho_gene_samrtseq2_df,cluster_cols = F,col=colorRampPalette(colors = c('navy','white','firebrick3'))(100))
-
-DLK_pos_NRBC_samrtseq2_df=nr_samrtseq2_df[,c('Y1_FDApos','Y1_FDApos.2','Y1_FDAneg')]
-DLK_pos_NRBC_samrtseq2_df=DLK_pos_NRBC_samrtseq2_df[rowSums(DLK_pos_NRBC_samrtseq2_df) >0,]
-colnames(DLK_pos_NRBC_samrtseq2_df)
-
-DLK1_pos_df=data.frame(cho_gene_samrtseq2_df[,c('Y1_FDApos.2','Y1_FDAneg')])
-colnames(DLK1_pos_df)=c('DLK1_pos_rep1','DLK1_pos_rep2')
-pheatmap(DLK1_pos_df[rowSums(DLK1_pos_df) >0,],cluster_cols = F,col=colorRampPalette(colors = c('navy','white','firebrick3'))(100))
-
-
-Y_spefici_genes=c('SRY','ZFY','TSPY','DYS14','AMELY','RPS4Y1','TTTY15','DAZ1','RBMY','CDY','BPY2','HSFY','XKRY','PRY', 'USP9Y', 'UTY', 'KDM5D','ZFX')
-rownames(nr_samrtseq2_df)[rownames(nr_samrtseq2_df) %in% Y_spefici_genes] # 测序数据量太低了，
-
+DLK_pos_NRBC_samrtseq2_df=log2(edgeR::cpm(DLK_pos_NRBC_samrtseq2_df)+1)# 破膜可能对adult nRBC的收集有重要影响
+DLK_pos_NRBC_samrtseq2_df=DLK_pos_NRBC_samrtseq2_df[c(fetal_markers,adult_markers,'HBD')[c(fetal_markers,adult_markers,'HBD') %in% rownames(DLK_pos_NRBC_samrtseq2_df)],]
+Y_spefici_genes[Y_spefici_genes %in% rownames(DLK_pos_NRBC_samrtseq2_df) ] # 未能检测到性别基因
+pheatmap(DLK_pos_NRBC_samrtseq2_df,cluster_cols = F,col=colorRampPalette(colors = c('navy','white','firebrick3'))(100),cluster_rows = F)
 
