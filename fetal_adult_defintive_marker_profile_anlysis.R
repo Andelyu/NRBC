@@ -101,29 +101,9 @@ pheatmap(annotation_col = col_an_df,FL_ABM_nRBC_df_refer_control_df[c('ACTB','HB
 
 c('HBG1','HBG2',fetal_markers,'HBD',adult_markers)[!c('HBG1','HBG2',fetal_markers,'HBD',adult_markers) %in% rownames(FL_ABM_nRBC_df_df)]
 
-############################################################################################################################################################################
-#-------------------------------------validated the DLK1 marker-------------------------#
-############################################################################################################################################################################
-####--------------------------sorted CD2351+DRAQ5+  NRBC----------------------------# 
-
-smartseq_NRBC_exp_df=readRDS('../zx_lab_NRBC/experiment_data/normalized_NRBC_smartseq2_genecount.rds')
-pheatmap(smartseq_NRBC_exp_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df) ],1:6],cluster_rows = F,cluster_cols = F)
-pheatmap(smartseq_NRBC_exp_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df) ],2:5],cluster_rows = F,cluster_cols = F)
-
-smartseq_NRBC_exp_df2=data.frame(smartseq_NRBC_exp_df[,'mPBMC2_NRBC']);colnames(smartseq_NRBC_exp_df2)='mPBMC1'
-smartseq_NRBC_exp_df2$mPBMC2=rowMeans(smartseq_NRBC_exp_df[,c('mPBMC1_CD81H', 'mPBMC1_CD81L', 'mPBMC1_CD81M')])
-smartseq_NRBC_exp_df2=smartseq_NRBC_exp_df2[rowSums(smartseq_NRBC_exp_df2) >0,]
-
-markers=c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df2) ]
-p1=pheatmap(smartseq_NRBC_exp_df2[markers,],cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
-ggsave(as.ggplot(p1),filename='../NRBC_DE_analysis/res_pic/main_figure6/final_candidated_marker_mPBMC_NRBC_heatmap.pdf',width = 3,height =5)
-
-
-Y_spefici_genes=c('SRY','ZFY','TSPY','DYS14','AMELY','RPS4Y1','TTTY15','DAZ1','RBMY','CDY','BPY2','HSFY','XKRY','PRY', 'USP9Y', 'UTY', 'KDM5D','ZFX')
-p2=pheatmap(smartseq_NRBC_exp_df2[Y_spefici_genes[Y_spefici_genes %in% rownames(smartseq_NRBC_exp_df2) ],],cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
-ggsave(as.ggplot(p2),filename='../NRBC_DE_analysis/res_pic/main_figure6/Y_sex_gene_mPBMC_NRBC_heatmap.pdf',width = 3,height =5)
-
-
+###################################################################################################################################################
+#----------------------------validated the marker profile in erythroblast related cell line
+###################################################################################################################################################
 #  分析HEL(fetal NRBC, HBG1/HBG2) 、K562( HBE1) 、HUDEP-2 ( HBB)常用红细胞系 中marker 的表达情况
 # /mnt/data/bio_program/2021_NRBC_chlyu/ref_data/bulk_RNAseq/erythroblast_cellline_data/HEL erythroleukemia_GSE203060_featureCounts.xlsx
 
@@ -204,22 +184,8 @@ p=pheatmap(HUDEP2_GSE314032_df[c(fetal_markers,'HBD',adult_markers),],
          color=colorRampPalette(colors = c('navy','white','firebrick3'))(100),annotation_row =an_df ,cluster_cols = F,cluster_rows = F,main = 'GSE314032:HUDEP2 cell line')
 ggsave(as.ggplot(p),filename='../NRBC_DE_analysis/res_pic/main_figure6/HUDEP2_fetal_marker_expression_heatmap.pdf',width = 4,height =8)
 
-#   高表达了HBG1、HBG2, 不能代表成人，舍弃
-CD34_GSE314034_df=read.csv('../ref_data/bulk_RNAseq/erythroblast_cellline_data/CD34+ GSE314034_WT_NoSCF_SCF_gene_count_matrix.csv')
-CD34_GSE314034_df$gene=strsplit2(CD34_GSE314034_df$gene_id,fixed = T,split = '|')[,1]
-rownames(CD34_GSE314034_df)=CD34_GSE314034_df$gene
-CD34_GSE314034_df=CD34_GSE314034_df[,-1]
-
-CD34_GSE314034_df=CD34_GSE314034_df[,1:6]
-CD34_GSE314034_df=log2(cpm(CD34_GSE314034_df)+1)
-pheatmap(CD34_GSE314034_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(CD34_GSE314034_df)],],cluster_cols = F,cluster_rows = F)
-
-pheatmap(cor(CD34_GSE314034_df))
-
 c(fetal_markers,'HBD',adult_markers)[!c(fetal_markers,'HBD',adult_markers) %in% rownames(HEL_GSE203060_df)]  
 # "HSPA1A" "MEG3"  
-
-
 cho_HEL_GSE203060_df=HEL_GSE203060_df[c(fetal_markers,'HBD',adult_markers),]
 
 
@@ -255,17 +221,29 @@ p=pheatmap(as.matrix(all_df),color=colorRampPalette(colors = c('navy','white','f
 ggsave(as.ggplot(p),filename='../NRBC_DE_analysis/res_pic/main_figure6/cellline_fetal_marker_expression_heatmap.pdf',width = 8,height =8)
 
 
-VlnPlot( filt_NBRC_altas_seu,features =c('ACVR2B'),group.by = 'source_celltype',raster=FALSE)+NoLegend()
-DotPlot(filt_NBRC_altas_seu,features =c('ACVR2B'),group.by = 'source_celltype',scale = F)+RotatedAxis()
 
-pheatmap(FL_ABM_nRBC_df_refer_control_df[c('ACTB','ACVR2B'),-grep('healthy_ery',colnames(FL_ABM_nRBC_df_refer_control_df))],cluster_rows = F,cluster_cols = F)
+############################################################################################################################################################################
+#-------------------------------------validated the DLK1 marker-------------------------#
+############################################################################################################################################################################
+####--------------------------sorted CD2351+DRAQ5+  NRBC----------------------------# 
 
-pheatmap(HEL_GSE203060_df[c('ACTB','ACVR2B'),],cluster_rows = F,cluster_cols = F)
-pheatmap(K562_GSE311284_df[c('ACTB','ACVR2B'),],cluster_rows = F,cluster_cols = F)
-pheatmap(HUDEP2_GSE314032_df[c('ACTB','ACVR2B'),],cluster_rows = F,cluster_cols = F)
+smartseq_NRBC_exp_df=readRDS('../zx_lab_NRBC/experiment_data/normalized_NRBC_smartseq2_genecount.rds')
+pheatmap(smartseq_NRBC_exp_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df) ],1:6],cluster_rows = F,cluster_cols = F)
+pheatmap(smartseq_NRBC_exp_df[c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df) ],2:5],cluster_rows = F,cluster_cols = F)
+
+smartseq_NRBC_exp_df2=data.frame(smartseq_NRBC_exp_df[,'mPBMC2_NRBC']);colnames(smartseq_NRBC_exp_df2)='mPBMC1'
+smartseq_NRBC_exp_df2$mPBMC2=rowMeans(smartseq_NRBC_exp_df[,c('mPBMC1_CD81H', 'mPBMC1_CD81L', 'mPBMC1_CD81M')])
+smartseq_NRBC_exp_df2=smartseq_NRBC_exp_df2[rowSums(smartseq_NRBC_exp_df2) >0,]
+
+markers=c(fetal_markers,'HBD',adult_markers)[c(fetal_markers,'HBD',adult_markers) %in% rownames(smartseq_NRBC_exp_df2) ]
+p1=pheatmap(smartseq_NRBC_exp_df2[markers,],cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
+ggsave(as.ggplot(p1),filename='../NRBC_DE_analysis/res_pic/main_figure6/final_candidated_marker_mPBMC_NRBC_heatmap.pdf',width = 3,height =5)
 
 
-pheatmap(nrbc_ref_se@assays@data$logcounts[c('ACVR2B'),]/nrbc_ref_se@assays@data$logcounts[c('ACTB'),],cluster_rows = F,cluster_cols = F,display_numbers = T)
+Y_spefici_genes=c('SRY','ZFY','TSPY','DYS14','AMELY','RPS4Y1','TTTY15','DAZ1','RBMY','CDY','BPY2','HSFY','XKRY','PRY', 'USP9Y', 'UTY', 'KDM5D','ZFX')
+p2=pheatmap(smartseq_NRBC_exp_df2[Y_spefici_genes[Y_spefici_genes %in% rownames(smartseq_NRBC_exp_df2) ],],cluster_rows = F,cluster_cols = F,color = colorRampPalette(colors = c('navy','white','firebrick3'))(100))
+ggsave(as.ggplot(p2),filename='../NRBC_DE_analysis/res_pic/main_figure6/Y_sex_gene_mPBMC_NRBC_heatmap.pdf',width = 3,height =5)
+
 
 
 # new-------
