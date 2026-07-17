@@ -467,38 +467,7 @@ saveRDS(YS_altas_seu,file ='NRBC_YS_altas/raw_ref_data/dealt_YS_altas_seu_202510
 
 ############################################################################################################################################################################
 #-----------------------------------------cellchat analysis--------------------------------#
-############################################################################################################################################################################
-future.seed=TRUE
-library(CellChat)
-library(Seurat)
-CellChatDB <- CellChatDB.human
-CellChatDB.use <- CellChatDB # simply use the default CellChatDB,
-options(future.globals.maxSize=80000 * 1024 ^ 2 )
-cho_cells=sample(colnames(YS_altas_seu),size=50000)
-YS_altas_seu=subset(YS_altas_seu,cells=cho_cells)
-YS_altas_seu=subset(YS_altas_seu, subcelltype %in% names(table(YS_altas_seu$subcelltype))[table(YS_altas_seu$subcelltype) >20])
-YS_altas_seu$subcelltype=droplevels(YS_altas_seu$subcelltype, exclude = setdiff(levels(YS_altas_seu$subcelltype),unique(YS_altas_seu$subcelltype)))
-YS_altas_seu=NormalizeData(YS_altas_seu)
-cellchat=createCellChat(YS_altas_seu,assay = 'RNA',group.by='subcelltype')
-rm(YS_altas_seu)
 
-CellChatDB <- CellChatDB.human
-CellChatDB.use <- CellChatDB
-cellchat@DB=CellChatDB.use
-cellchat=subsetData(cellchat)
-future::plan("multisession", workers = 4) # do parallel
-cellchat=identifyOverExpressedGenes(cellchat)
-cellchat=identifyOverExpressedInteractions(cellchat)
-cellchat=projectData(cellchat,PPI.human)
-celllchat= computeCommunProb(cellchat, type = "triMean",raw.use = FALSE,population.size = TRUE)
-#celllchat=computeCommunProb(cellchat)
-cellchat=filterCommunication(cellchat, min.cells = 20)
-saveRDS(cellchat,file='YS_subcelltype_cellchat.rds')
-cellchat=computeCommunProbPathway(cellchat)
-cellchat=aggregateNet(cellchat)
-cellchat=netAnalysis_computeCentrality(cellchat)
-
-saveRDS(cellchat,file='YS_subcelltype_cellchat.rds')
 
 
 
